@@ -1,0 +1,19 @@
+[package]
+name = "modular_arithmetic"
+version = "0.1.0"
+edition = "2021"
+
+[profile.dev]
+opt-level = 2
+overflow-checks = true
+
+[profile.test]
+opt-level = 2
+overflow-checks = true
+
+[profile.release]
+opt-level = 3
+
+[dependencies]
+num = "0.4"
+rand = "0.8"
