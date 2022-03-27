@@ -1,4 +1,4 @@
-//!
+//! to add: multip inverse
 //!
 //!
 use std::{cmp, mem};
