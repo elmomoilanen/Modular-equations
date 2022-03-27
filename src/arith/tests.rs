@@ -291,3 +291,64 @@ fn gcd_large_type() {
         assert_eq!(u128::gcd(x, y), test[2], "x: {}, y: {}", x, y);
     }
 }
+
+#[test]
+fn multip_inv_small_type() {
+    let u8max = u8::MAX;
+
+    // [x, modu, x^(-1)]: x * x^(-1) = 1 (mod modu)
+    // if x^(-1) is zero, proper inverse doesn't exist
+    let test_cases: [[u8; 3]; 10] = [
+        [0, 11, 0],
+        [1, 11, 1],
+        [5, 11, 9],
+        [8, 11, 7],
+        [10, 11, 10],
+        [1, u8max, 1],
+        [2, u8max, 128],
+        [u8max - 1, u8max, u8max - 1],
+        [100, u8max, 0],
+        [104, u8max, 179],
+    ];
+
+    for test in test_cases.iter() {
+        let (x, modu) = (test[0], test[1]);
+        assert_eq!(u8::multip_inv(x, modu), test[2], "x: {}, mod: {}", x, modu);
+    }
+}
+
+#[test]
+fn multip_inv_large_type() {
+    let u128max = u128::MAX;
+    let i64max = i64::MAX as u128;
+
+    // [x, modu, x^(-1)]: x * x^(-1) = 1 (mod modu)
+    // if x^(-1) is zero, proper inverse doesn't exist
+    let test_cases: [[u128; 3]; 10] = [
+        [3, 5000, 1667],
+        [1667, 5000, 3],
+        [999, 5000, 3999],
+        [55, 5000, 0],
+        [999, i64max, 3_619_181_019_466_538_655],
+        [i64max - 3, i64max, 3_074_457_345_618_258_602],
+        [0, u128max, 0],
+        [u128max, u128max, 0],
+        [u128max - 1, u128max, u128max - 1],
+        [
+            2,
+            u128max,
+            170_141_183_460_469_231_731_687_303_715_884_105_728,
+        ],
+    ];
+
+    for test in test_cases.iter() {
+        let (x, modu) = (test[0], test[1]);
+        assert_eq!(
+            u128::multip_inv(x, modu),
+            test[2],
+            "x: {}, mod: {}",
+            x,
+            modu
+        );
+    }
+}

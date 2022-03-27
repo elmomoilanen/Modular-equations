@@ -1,4 +1,4 @@
-//! to add: multip inverse
+//!
 //!
 //!
 use std::{cmp, mem};
@@ -118,6 +118,37 @@ pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
                 break x.unsigned_shl(shift);
             }
         }
+    }
+
+    fn multip_inv(mut x: T, modu: T) -> T {
+        let zero = T::zero();
+        let one = T::one();
+
+        if x >= modu {
+            x = x % modu;
+        }
+
+        let (mut rem, mut rem_new) = (modu, x);
+        let (mut inv, mut inv_new) = (zero, one);
+
+        while rem_new > zero {
+            let quo = rem / rem_new;
+
+            let rem_temp = rem_new;
+            rem_new = rem - quo * rem_new;
+            rem = rem_temp;
+
+            let inv_temp = inv_new;
+            inv_new = Self::sub_unsafe(inv, Self::mult_unsafe(quo, inv_new, modu), modu);
+            inv = inv_temp;
+        }
+
+        if rem > one {
+            // inverse doesn't exist, gcd(x, modu) > 1
+            return zero;
+        }
+
+        inv
     }
 }
 
