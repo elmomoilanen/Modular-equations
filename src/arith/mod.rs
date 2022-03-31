@@ -1,9 +1,10 @@
 //!
 //!
 //!
+use std::convert::TryFrom;
 use std::{cmp, mem};
 
-use num::{PrimInt, Unsigned};
+use num::{PrimInt, Signed, Unsigned};
 
 pub trait CoreArith<T: PrimInt + Unsigned> {
     fn add_unsafe(x: T, y: T, modu: T) -> T {
@@ -149,6 +150,41 @@ pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
         }
 
         inv
+    }
+}
+
+pub trait SignCast<S, T>
+where
+    S: PrimInt + Signed,
+    T: PrimInt + Unsigned + TryFrom<S>,
+{
+    fn cast_to_unsigned(x: S, modu: T) -> Option<T> {
+        if x > S::zero() {
+            return match T::try_from(x) {
+                Ok(x) => Some(x),
+                Err(_) => None,
+            };
+        }
+        if x == S::min_value() {
+            return None;
+        }
+
+        let x_abs = match T::try_from(x.abs()) {
+            Ok(x) => x,
+            Err(_) => return None,
+        };
+
+        if x_abs <= modu {
+            return Some(modu - x_abs);
+        }
+
+        let mut k = x_abs / modu;
+
+        if x_abs % modu > T::zero() {
+            k = k + T::one();
+        }
+
+        Some(k * modu - x_abs)
     }
 }
 

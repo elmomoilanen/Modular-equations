@@ -1,10 +1,13 @@
-use crate::{Arith, CoreArith};
+use crate::{Arith, CoreArith, SignCast};
 
 impl CoreArith<u8> for u8 {}
 impl Arith<u8> for u8 {}
 
 impl CoreArith<u128> for u128 {}
 impl Arith<u128> for u128 {}
+
+impl SignCast<i8, u8> for i8 {}
+impl SignCast<i128, u128> for i128 {}
 
 #[test]
 fn add_small_type() {
@@ -24,6 +27,7 @@ fn add_small_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u8::add(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -46,6 +50,7 @@ fn add_small_type_max_mod() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u8::add(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -69,6 +74,7 @@ fn add_large_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::add(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -91,6 +97,7 @@ fn add_large_type_max_mod() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::add(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -115,6 +122,7 @@ fn sub_small_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u8::sub(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -138,6 +146,7 @@ fn sub_large_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::sub(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -162,6 +171,7 @@ fn mult_small_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u8::mult(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -187,6 +197,7 @@ fn mult_large_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::mult(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -206,6 +217,7 @@ fn mult_large_max_mod() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::mult(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -230,6 +242,7 @@ fn exp_small_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u8::exp(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -252,6 +265,7 @@ fn exp_large_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::exp(x, y, modu), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -288,6 +302,7 @@ fn gcd_large_type() {
 
     for test in test_cases.iter() {
         let (x, y) = (test[0], test[1]);
+
         assert_eq!(u128::gcd(x, y), test[2], "x: {}, y: {}", x, y);
     }
 }
@@ -313,6 +328,7 @@ fn multip_inv_small_type() {
 
     for test in test_cases.iter() {
         let (x, modu) = (test[0], test[1]);
+
         assert_eq!(u8::multip_inv(x, modu), test[2], "x: {}, mod: {}", x, modu);
     }
 }
@@ -343,6 +359,7 @@ fn multip_inv_large_type() {
 
     for test in test_cases.iter() {
         let (x, modu) = (test[0], test[1]);
+
         assert_eq!(
             u128::multip_inv(x, modu),
             test[2],
@@ -350,5 +367,106 @@ fn multip_inv_large_type() {
             x,
             modu
         );
+    }
+}
+
+#[test]
+fn sign_cast_success_small_type() {
+    let modu = 5;
+    let i8_min_valid = i8::MIN + 1;
+
+    let test_cases: [(i8, u8); 6] = [
+        (-1, 4),
+        (-2, 3),
+        (-5, 0),
+        (-11, 4),
+        (i8_min_valid, 3),
+        (1, 1),
+    ];
+
+    for test in test_cases.iter() {
+        let (x, x_corr) = *test;
+
+        match i8::cast_to_unsigned(x, modu) {
+            Some(res) => assert_eq!(res, x_corr),
+            _ => assert_eq!(u8::MAX, x_corr, "x: {}", x),
+        }
+    }
+}
+
+#[test]
+fn sign_cast_success_small_type_max_modu() {
+    let modu = u8::MAX;
+    let i8_min_valid = i8::MIN + 1;
+
+    let test_cases: [(i8, u8); 4] = [
+        (-1, modu - 1),
+        (-100, modu - 100),
+        (i8_min_valid, i8::MAX as u8 + 1),
+        (i8::MAX, i8::MAX as u8),
+    ];
+
+    for test in test_cases.iter() {
+        let (x, x_corr) = *test;
+
+        match i8::cast_to_unsigned(x, modu) {
+            Some(res) => assert_eq!(res, x_corr),
+            _ => assert_eq!(u8::MAX, x_corr, "x: {}", x),
+        }
+    }
+}
+
+#[test]
+fn sign_cast_failure_small_type() {
+    match i8::cast_to_unsigned(i8::MIN, 1u8) {
+        Some(_) => assert!(false),
+        None => assert!(true),
+    }
+}
+
+#[test]
+fn sign_cast_success_large_type() {
+    let modu = 7;
+    let i128_min_valid = i128::MIN + 1;
+
+    let test_cases: [(i128, u128); 4] = [(-3, 4), (-11, 3), (i128_min_valid, 6), (1, 1)];
+
+    for test in test_cases.iter() {
+        let (x, x_corr) = *test;
+
+        match i128::cast_to_unsigned(x, modu) {
+            Some(res) => assert_eq!(res, x_corr),
+            _ => assert_eq!(u128::MAX, x_corr, "x: {}", x),
+        }
+    }
+}
+
+#[test]
+fn sign_cast_success_large_type_max_modu() {
+    let modu = u128::MAX;
+    let i128_min_valid = i128::MIN + 1;
+
+    let test_cases: [(i128, u128); 4] = [
+        (-1, modu - 1),
+        (-100, modu - 100),
+        (i128_min_valid, i128::MAX as u128 + 1),
+        (i128::MAX, i128::MAX as u128),
+    ];
+
+    for test in test_cases.iter() {
+        let (x, x_corr) = *test;
+
+        match i128::cast_to_unsigned(x, modu) {
+            Some(res) => assert_eq!(res, x_corr),
+            _ => assert_eq!(u128::MAX, x_corr, "x: {}", x),
+        }
+    }
+}
+
+#[test]
+fn sign_cast_failure_large_type() {
+    match i128::cast_to_unsigned(i128::MIN, 1u128) {
+        Some(_) => assert!(false),
+        None => assert!(true),
     }
 }
