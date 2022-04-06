@@ -7,7 +7,7 @@ use std::{cmp, mem};
 use num::{PrimInt, Signed, Unsigned};
 
 pub trait CoreArith<T: PrimInt + Unsigned> {
-    fn add_unsafe(x: T, y: T, modu: T) -> T {
+    fn add_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x < modu - y {
             x + y
         } else {
@@ -15,7 +15,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
-    fn sub_unsafe(x: T, y: T, modu: T) -> T {
+    fn sub_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x >= y {
             x - y
         } else {
@@ -23,7 +23,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
-    fn mult_unsafe(mut x: T, mut y: T, modu: T) -> T {
+    fn mult_mod_unsafe(mut x: T, mut y: T, modu: T) -> T {
         let zero = T::zero();
         let one = T::one();
 
@@ -35,16 +35,16 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
 
         while y > zero {
             if y & one == one {
-                res = Self::add_unsafe(res, x, modu);
+                res = Self::add_mod_unsafe(res, x, modu);
             }
             y = y.unsigned_shr(1);
-            x = Self::add_unsafe(x, x, modu);
+            x = Self::add_mod_unsafe(x, x, modu);
         }
 
         res
     }
 
-    fn exp_unsafe(mut base: T, mut ex: T, modu: T) -> T {
+    fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
         let zero = T::zero();
         let one = T::one();
 
@@ -56,10 +56,10 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
 
         while ex > zero {
             if ex & one == one {
-                res = Self::mult_unsafe(res, base, modu);
+                res = Self::mult_mod_unsafe(res, base, modu);
             }
             ex = ex.unsigned_shr(1);
-            base = Self::mult_unsafe(base, base, modu);
+            base = Self::mult_mod_unsafe(base, base, modu);
         }
 
         res
@@ -67,39 +67,39 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
 }
 
 pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
-    fn add(x: T, y: T, modu: T) -> T {
+    fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
-            Self::add_unsafe(x, y, modu)
+            Self::add_mod_unsafe(x, y, modu)
         } else {
-            Self::add_unsafe(x % modu, y % modu, modu)
+            Self::add_mod_unsafe(x % modu, y % modu, modu)
         }
     }
 
-    fn sub(x: T, y: T, modu: T) -> T {
+    fn sub_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
-            Self::sub_unsafe(x, y, modu)
+            Self::sub_mod_unsafe(x, y, modu)
         } else {
-            Self::sub_unsafe(x % modu, y % modu, modu)
+            Self::sub_mod_unsafe(x % modu, y % modu, modu)
         }
     }
 
-    fn mult(x: T, y: T, modu: T) -> T {
+    fn mult_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
-            Self::mult_unsafe(x, y, modu)
+            Self::mult_mod_unsafe(x, y, modu)
         } else {
-            Self::mult_unsafe(x % modu, y % modu, modu)
+            Self::mult_mod_unsafe(x % modu, y % modu, modu)
         }
     }
 
-    fn exp(base: T, ex: T, modu: T) -> T {
+    fn exp_mod(base: T, ex: T, modu: T) -> T {
         if base < modu {
-            Self::exp_unsafe(base, ex, modu)
+            Self::exp_mod_unsafe(base, ex, modu)
         } else {
-            Self::exp_unsafe(base % modu, ex, modu)
+            Self::exp_mod_unsafe(base % modu, ex, modu)
         }
     }
 
-    fn gcd(mut x: T, mut y: T) -> T {
+    fn gcd_mod(mut x: T, mut y: T) -> T {
         let zero = T::zero();
 
         if x == zero || y == zero {
@@ -140,7 +140,7 @@ pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
             rem = rem_temp;
 
             let inv_temp = inv_new;
-            inv_new = Self::sub_unsafe(inv, Self::mult_unsafe(quo, inv_new, modu), modu);
+            inv_new = Self::sub_mod_unsafe(inv, Self::mult_mod_unsafe(quo, inv_new, modu), modu);
             inv = inv_temp;
         }
 
@@ -161,11 +161,12 @@ where
     fn cast_to_unsigned(x: S, modu: T) -> Option<T> {
         if x > S::zero() {
             return match T::try_from(x) {
-                Ok(x) => Some(x),
+                Ok(x) => Some(x % modu),
                 Err(_) => None,
             };
         }
         if x == S::min_value() {
+            // no abs value
             return None;
         }
 
