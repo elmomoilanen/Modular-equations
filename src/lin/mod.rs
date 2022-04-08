@@ -1,4 +1,7 @@
+//! Implements a solver for linear modular equations.
 //!
+//! These equations are of the form ax + b = c (mod n).
+//! Modulo n must be a positive integer and larger than one.
 //!
 //!
 use crate::{
@@ -24,6 +27,7 @@ pub struct LinEqSigned<S: Int, T: UInt> {
 impl<T: UInt> LinEq<T> {
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() {
+            // smallest accepted modulus is two
             return None;
         }
 
@@ -36,6 +40,7 @@ impl<T: UInt> LinEq<T> {
         let gcd_am = T::gcd_mod(self.a, self.modu);
 
         if c % gcd_am > T::zero() {
+            // gcd(a, modu) doesn't divide c, no solution
             return None;
         }
 

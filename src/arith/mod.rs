@@ -1,5 +1,8 @@
+//! Defines basic modular arithmetic operations.
 //!
-//!
+//! Use functions under `Arith` trait unless it's guaranteed that the operands
+//! are less than the modulus `modu`, or in other words the operands are the
+//! smallest nonnegative representatives of their residue class.
 //!
 use std::convert::TryFrom;
 use std::{cmp, mem};
