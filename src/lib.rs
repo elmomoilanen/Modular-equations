@@ -28,8 +28,48 @@
 //! to work with since every nonzero elements have a multiplicative inverse.
 //!
 //! In the context of rings or fields, it's meaningful to speak of equations and this library
-//! implements solvers for linear and quadratic equations.
+//! implements solvers for linear and quadratic equations. Next follows few examples of linear
+//! equations of the form ax + b = c (mod M).
 //!
+//! ```
+//! use modular_arithmetic::LinEq;
+//!
+//! let lin_eq = LinEq::<u32> {
+//!     a: 13,
+//!     b: 17,
+//!     c: 5,
+//!     modu: 29,
+//! };
+//! let sol = lin_eq.solve();
+//!
+//! // residue class [8] is the correct solution (smallest nonnegative member)
+//! assert!(sol.is_some() && sol.unwrap()[0] == 8);
+//! ```
+//!
+//! Following linear equation doesn't have solution
+//!
+//! ```
+//! use modular_arithmetic::LinEqSigned;
+//!
+//! let lin_eq = LinEqSigned::<i8, u8> {
+//!     a: -3,
+//!     b: -1,
+//!     c: 3,
+//!     modu: 9
+//! };
+//!
+//! assert_eq!(lin_eq.solve(), None);
+//! ```
+//!
+//! If any of the coefficients is signed, one must use the signed type equation
+//! `LinEqSigned`. Notice however that in this case, the modulo must still be unsigned.
+//! Every negative integer in the ring can be turned to the smallest nonnegative
+//! representative of the corresponding residue class [x]. With respect to this there
+//! are few technical restrictions, the first being that the used signed type (e.g. i32)
+//! must have the arith::SignCast trait implemented and that trait requires the signed
+//! and unsigned types to be compatible (i.e., same size e.g. i32 and u32). In addition,
+//! as the smallest negative integer of each type doesn't have an absolute value in
+//! two's complement, they will trigger panic if used as coefficients in equations.
 //!
 use std::convert::{From, Into};
 use std::fmt::{Debug, Display};

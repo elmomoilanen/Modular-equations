@@ -64,7 +64,7 @@ where
     S: Int + SignCast<S, T>,
     T: UInt + TryFrom<S>,
 {
-    fn solve(&self) -> Option<Vec<T>> {
+    pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {
             Some(a) => a,
             None => panic!("arg `a` cannot be casted to unsigned."),
