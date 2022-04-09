@@ -1,8 +1,9 @@
 //! Implements a solver for linear modular equations.
 //!
-//! These equations are of the form ax + b = c (mod n).
-//! Modulo n must be a positive integer and larger than one.
-//!
+//! Modular linear equations are of the form ax + b = c (mod n) where
+//! every term or element is a residue class [.] belonging to the ring
+//! Z/nZ. Modulo term `n` must be a positive integer and strictly larger
+//! than one.
 //!
 use crate::{
     arith::{Arith, SignCast},
@@ -10,6 +11,13 @@ use crate::{
 };
 use num::iter;
 
+/// A type for linear equations with all coefficients being unsigned.
+///
+/// Linear modular equations are of the form ax + b = c (mod n) where
+/// coefs `a`, `b` and `c` must be nonnegative for this type. Modulo `n`
+/// must be the same unsigned type and strictly larger than one. Solve
+/// method of this type will panic if the modulo `n` doesn't satisfy
+/// this requirement.
 pub struct LinEq<T: UInt> {
     pub a: T,
     pub b: T,
@@ -17,6 +25,13 @@ pub struct LinEq<T: UInt> {
     pub modu: T,
 }
 
+/// A type for linear equations with all coefficients being signed.
+///
+/// Linear modular equations are of the form ax + b = c (mod n) where
+/// coefs `a`, `b` and `c` are signed for this type. Modulo `n` must be
+/// an unsigned type, compatible to the signed type (e.g. u32 is for i32)
+/// and strictly larger than one. Solve method of this type will panic
+/// if the modulo `n` doesn't satisfy this requirement.
 pub struct LinEqSigned<S: Int, T: UInt> {
     pub a: S,
     pub b: S,

@@ -81,7 +81,6 @@ mod lin;
 mod prime;
 mod quad;
 
-///
 pub trait UInt: PrimInt + Unsigned + Display + Debug + From<u8> + Into<u128> {}
 
 impl<T> UInt for T where T: PrimInt + Unsigned + Display + Debug + From<u8> + Into<u128> {}
@@ -89,7 +88,6 @@ impl<T> UInt for T where T: PrimInt + Unsigned + Display + Debug + From<u8> + In
 impl<T> arith::CoreArith<T> for T where T: UInt {}
 impl<T> arith::Arith<T> for T where T: UInt {}
 
-///
 pub trait Int: PrimInt + Signed + Display + Debug + From<i8> + Into<i128> {}
 
 impl<S> Int for S where S: PrimInt + Signed + Display + Debug + From<i8> + Into<i128> {}
