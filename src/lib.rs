@@ -100,3 +100,4 @@ impl arith::SignCast<i128, u128> for i128 {}
 impl arith::SignCast<isize, usize> for isize {}
 
 pub use lin::{LinEq, LinEqSigned};
+pub use quad::{QuadEq, QuadEqSigned};
