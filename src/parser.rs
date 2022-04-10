@@ -33,34 +33,37 @@ pub fn parse_args(args: &[String]) -> Result<Vec<EquaKind>, String> {
         1 if &args[0] == "--help" || &args[0] == "-h" => {
             show_help();
             Err("help".to_string())
-        },
+        }
         5 => {
             if let Some(eq) = parse_to_equation(args) {
                 Ok(vec![eq])
             } else {
                 Err("error when parsing quadratic equation.".to_string())
             }
-        },
+        }
         _ if args_len % 4 == 0 => {
             let mut eq_vec: Vec<EquaKind> = vec![];
 
             for (i, a_idx) in (0..args_len).step_by(4).enumerate() {
-                if let Some(eq) = parse_to_equation(&args[a_idx..a_idx+4]) {
+                if let Some(eq) = parse_to_equation(&args[a_idx..a_idx + 4]) {
                     eq_vec.push(eq);
                 } else {
-                    return Err(format!("error when parsing {}th linear equation", i));
+                    return Err(format!("error when parsing {}th linear equation", i + 1));
                 }
             }
             Ok(eq_vec)
         }
-        _ => {
-            Err("argument count mismatch, pass either 4*n args for linear(s) or five args for quadratic equations.".to_string())
-        }
+        _ => Err(
+            "arg count mismatch: pass either 4*k for linear or 5 for quadratic equation."
+                .to_string(),
+        ),
     }
 }
 
 fn parse_to_equation(args: &[String]) -> Option<EquaKind> {
-    let eq_type = match args.len() {
+    let args_len = args.len();
+
+    let eq_type = match args_len {
         4 => EqType::Linear,
         5 => EqType::Quad,
         _ => return None,
@@ -69,9 +72,8 @@ fn parse_to_equation(args: &[String]) -> Option<EquaKind> {
     let mut modulo: Option<u128> = None;
 
     for (idx, arg) in args.iter().enumerate() {
-        if (idx == 4 && eq_type == EqType::Linear) || (idx == 5 && eq_type == EqType::Quad) {
+        if idx == args_len - 1 {
             modulo = parse_to_number::<u128>(arg);
-            break; // all parsed
         } else {
             coefs[idx] = parse_to_number::<i128>(arg);
         }
@@ -149,5 +151,5 @@ fn find_proper_type(
 }
 
 fn show_help() {
-    println!("\nusage: ./modular_arithmetic ...");
+    println!("Solve modular equations\n\nUSAGE:\n  ./modular_arithmetic ...\n");
 }
