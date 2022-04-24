@@ -12,7 +12,7 @@ use parser::EquaKind;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let eq_vec = parser::parse_args(&args[1..]).unwrap_or_else(|err| {
+    let equa = parser::parse_args(&args[1..]).unwrap_or_else(|err| {
         if err == "help" {
             process::exit(0);
         }
@@ -21,12 +21,7 @@ fn main() {
         process::exit(1);
     });
 
-    if eq_vec.len() > 1 {
-        eprintln!("not implemented yet!");
-        return;
-    }
-
-    match &eq_vec[0] {
+    match &equa {
         EquaKind::LinearI64(eq_lin) => print_sol(eq_lin.solve(), eq_lin.modu),
         EquaKind::QuadI64(_eq_quad) => (),
         EquaKind::LinearI128(eq_lin_large) => print_sol(eq_lin_large.solve(), eq_lin_large.modu),

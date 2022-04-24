@@ -25,7 +25,7 @@ enum EqType {
     Quad,
 }
 
-pub fn parse_args(args: &[String]) -> Result<Vec<EquaKind>, String> {
+pub fn parse_args(args: &[String]) -> Result<EquaKind, String> {
     let args_len = args.len();
 
     match args_len {
@@ -34,27 +34,22 @@ pub fn parse_args(args: &[String]) -> Result<Vec<EquaKind>, String> {
             show_help();
             Err("help".to_string())
         }
-        5 => {
-            if let Some(eq) = parse_to_equation(args) {
-                Ok(vec![eq])
+        4 => {
+            if let Some(lin_equa) = parse_to_equation(args) {
+                Ok(lin_equa)
             } else {
-                Err("error when parsing quadratic equation.".to_string())
+                Err("invalid arg values for linear equation.".to_string())
             }
         }
-        _ if args_len % 4 == 0 => {
-            let mut eq_vec: Vec<EquaKind> = vec![];
-
-            for (i, a_idx) in (0..args_len).step_by(4).enumerate() {
-                if let Some(eq) = parse_to_equation(&args[a_idx..a_idx + 4]) {
-                    eq_vec.push(eq);
-                } else {
-                    return Err(format!("error when parsing {}th linear equation", i + 1));
-                }
+        5 => {
+            if let Some(quad_eq) = parse_to_equation(args) {
+                Ok(quad_eq)
+            } else {
+                Err("invalid arg values for quadratic equation.".to_string())
             }
-            Ok(eq_vec)
         }
         _ => Err(
-            "arg count mismatch: pass either 4*k for linear or 5 for quadratic equation."
+            "arg count mismatch: pass either four for linear or five for quadratic equation."
                 .to_string(),
         ),
     }
@@ -82,8 +77,8 @@ fn parse_to_equation(args: &[String]) -> Option<EquaKind> {
     let coefs_len = coefs.len();
 
     match eq_type {
-        EqType::Linear => find_proper_type(&coefs[..coefs_len - 1], modulo, eq_type),
-        EqType::Quad => find_proper_type(&coefs, modulo, eq_type),
+        EqType::Linear => parse_proper_type(&coefs[..coefs_len - 1], modulo, eq_type),
+        EqType::Quad => parse_proper_type(&coefs, modulo, eq_type),
     }
 }
 
@@ -103,7 +98,7 @@ fn parse_to_number<T: PrimInt + FromStr>(arg: &str) -> Option<T> {
     }
 }
 
-fn find_proper_type(
+fn parse_proper_type(
     coefs: &[Option<i128>],
     modulo: Option<u128>,
     eq_type: EqType,
@@ -113,40 +108,55 @@ fn find_proper_type(
     }
 
     let modu = modulo.unwrap();
+
+    if modu <= 1 {
+        // modulo must be at least two
+        return None;
+    }
+
     let coefs: Vec<i128> = coefs.iter().map(|&coef| coef.unwrap()).collect();
 
+    if coefs[0] == 0 {
+        // coef for x^2 or x term must be non-zero
+        return None;
+    }
+
+    Some(get_proper_eq_type(&coefs, modu, eq_type))
+}
+
+fn get_proper_eq_type(coefs: &[i128], modu: u128, eq_type: EqType) -> EquaKind {
     let smaller_modu = modu <= U64_VALID_MAX;
     let smaller_coefs = coefs
         .iter()
         .all(|&coef| coef >= I64_VALID_MIN && coef <= I64_VALID_MAX);
 
     match (eq_type, smaller_coefs && smaller_modu) {
-        (EqType::Linear, true) => Some(EquaKind::LinearI64(LinEqSigned::<i64, u64> {
+        (EqType::Linear, true) => EquaKind::LinearI64(LinEqSigned::<i64, u64> {
             a: coefs[0].try_into().unwrap(),
             b: coefs[1].try_into().unwrap(),
             c: coefs[2].try_into().unwrap(),
             modu: modu.try_into().unwrap(),
-        })),
-        (EqType::Linear, false) => Some(EquaKind::LinearI128(LinEqSigned::<i128, u128> {
+        }),
+        (EqType::Linear, false) => EquaKind::LinearI128(LinEqSigned::<i128, u128> {
             a: coefs[0],
             b: coefs[1],
             c: coefs[2],
             modu,
-        })),
-        (EqType::Quad, true) => Some(EquaKind::QuadI64(QuadEqSigned::<i64, u64> {
+        }),
+        (EqType::Quad, true) => EquaKind::QuadI64(QuadEqSigned::<i64, u64> {
             a: coefs[0].try_into().unwrap(),
             b: coefs[1].try_into().unwrap(),
             c: coefs[2].try_into().unwrap(),
             d: coefs[3].try_into().unwrap(),
             modu: modu.try_into().unwrap(),
-        })),
-        (EqType::Quad, false) => Some(EquaKind::QuadI128(QuadEqSigned::<i128, u128> {
+        }),
+        (EqType::Quad, false) => EquaKind::QuadI128(QuadEqSigned::<i128, u128> {
             a: coefs[0],
             b: coefs[1],
             c: coefs[2],
             d: coefs[3],
             modu,
-        })),
+        }),
     }
 }
 
