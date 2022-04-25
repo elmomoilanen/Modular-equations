@@ -4,7 +4,7 @@
 //! are less than the modulus `modu`, or in other words the operands are the
 //! smallest nonnegative representatives of their residue class.
 //!
-use std::convert::TryFrom;
+use std::convert::{From, TryFrom};
 use std::{cmp, mem};
 
 use num::{PrimInt, Signed, Unsigned};
@@ -69,7 +69,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     }
 }
 
-pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
+pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
     fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::add_mod_unsafe(x, y, modu)
@@ -153,6 +153,41 @@ pub trait Arith<T: PrimInt + Unsigned>: CoreArith<T> {
         }
 
         inv
+    }
+
+    fn jacobi_symbol(mut x: T, mut n: T) -> i8 {
+        if x >= n {
+            x = x % n;
+        }
+
+        let (zero, one) = (T::zero(), T::one());
+        let (three, five, seven) = (3.into(), 5.into(), 7.into());
+
+        let mut param_t = 1;
+
+        while x > zero {
+            while x & one == zero {
+                x = x.signed_shr(1);
+
+                let param_r = n & seven;
+                if param_r == three || param_r == five {
+                    param_t = -param_t;
+                }
+            }
+
+            mem::swap(&mut x, &mut n);
+
+            if (x & three) == three && (n & three) == three {
+                param_t = -param_t;
+            }
+            x = x % n;
+        }
+
+        if n == one {
+            param_t
+        } else {
+            0
+        }
     }
 }
 

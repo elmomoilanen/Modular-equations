@@ -362,6 +362,51 @@ fn multip_inv_large_type() {
 }
 
 #[test]
+fn jacobi_symbol_small_operands() {
+    let test_cases: [(u32, u32, i8); 15] = [
+        (1, 1, 1),
+        (15, 1, 1),
+        (2, 3, -1),
+        (29, 9, 1),
+        (4, 11, 1),
+        (17, 11, -1),
+        (19, 29, -1),
+        (10, 33, -1),
+        (11, 33, 0),
+        (12, 33, 0),
+        (14, 33, -1),
+        (15, 33, 0),
+        (15, 37, -1),
+        (29, 59, 1),
+        (30, 59, -1),
+    ];
+
+    for case in test_cases.iter() {
+        let (x, n, res) = case;
+
+        assert_eq!(u32::jacobi_symbol(*x, *n), *res, "x: {}, n: {}", *x, *n);
+    }
+}
+
+#[test]
+fn jacobi_symbol_large_operands() {
+    let max_i128 = i128::MAX as u128;
+
+    let test_cases: [(u128, u128, i8); 4] = [
+        (1_241_942_351, 2_147_483_647, 1),
+        (99, max_i128, 1),
+        (max_i128 - 1, max_i128, -1),
+        (max_i128, max_i128, 0),
+    ];
+
+    for case in test_cases.iter() {
+        let (x, n, res) = case;
+
+        assert_eq!(u128::jacobi_symbol(*x, *n), *res, "x: {}, n: {}", *x, *n);
+    }
+}
+
+#[test]
 fn sign_cast_success_small_type() {
     let modu = 5;
     let i8_min_valid = i8::MIN + 1;
