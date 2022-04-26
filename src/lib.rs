@@ -77,6 +77,7 @@ use std::fmt::{Debug, Display};
 use num::{PrimInt, Signed, Unsigned};
 
 mod arith;
+mod factor;
 mod lin;
 mod prime;
 mod quad;

@@ -1,4 +1,4 @@
-//! Defines basic modular arithmetic operations.
+//! Implements basic modular arithmetic operations.
 //!
 //! Use functions under `Arith` trait unless it's guaranteed that the operands
 //! are less than the modulus `modu`, or in other words the operands are the

@@ -1,5 +1,8 @@
+//! Implements primality testing for odd natural numbers.
 //!
-//!
+//! Primality testing is separated in the following manner:
+//! - Numbers having 64 or less bits are cheched with the Miller-Rabin test.
+//! - Larger numbers up to 128 bits are cheched with the strong Baillie-PSW test.
 //!
 use std::cmp::Ordering;
 use std::convert::{Into, TryInto};
@@ -199,6 +202,7 @@ fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
     if luc_u != 0 || !is_slprp || !pass_euler_crit {
         return false;
     }
+
     if u128::mult_mod(2, luc_q, num) != luc_v % num {
         return false;
     }
