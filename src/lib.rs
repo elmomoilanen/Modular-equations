@@ -4,30 +4,30 @@
 //! where elements of the system (i.e., integers) wrap around after reaching
 //! a specific boundary value called modulus.
 //!
-//! Before giving a concrete definition for such arithmetic system the following
-//! relation needs to be stated: Given a positive integer M > 1, integer x is said
-//! to be congruent to integer y, if M divides their difference (mathematically written
+//! Before giving a concrete definition for such arithmetic system the following congruence
+//! relation needs to be introduced: Given a positive integer M > 1, integer x is said
+//! to be congruent to integer y, if M divides their difference (written mathematically
 //! as M | (x - y)). In this case integers x and y are in a relation which is denoted
-//! as x ≡ y (mod modu) and importantly this relation is an equivalence relation.
+//! as x ≡ y (mod M) and importantly this relation is an equivalence relation.
 //!
 //! Finally, the modular arithmetic system is constructed such that the elements of it
-//! are so called residue or congruence classes [x] consisting of all the integers congruent
-//! to x modulo M, or in other words all integers of the form {..., x - M, x, x + M, ...} =
-//! {x + k * M}, k being a integer belonging to Z. Hence, in principle, all of these integers
-//! are valid representatives of their residue class [x] but the common way is to use
-//! the smallest nonnegative integer (modulo M) to represent the residue class. Congruence
-//! relation was mentioned to be an equivalence relation and thus every integer can belong
-//! to only one residue class modulo M.
+//! are so called residue or congruence classes [x], where one class [x] is consisting
+//! of all the integers congruent to x modulo M, or in other words all integers of the form
+//! {..., x - M, x, x + M, ...} = {x + k * M}, k being a integer belonging to Z. Hence,
+//! in principle, all of these integers {x + k * M} are valid representatives of their
+//! residue class [x] but the common way is to use the smallest nonnegative integer (modulo M)
+//! to represent the residue class. As the congruence relation is an equivalence relation,
+//! every integer can belong to only one residue class modulo M.
 //!
 //! When listing all possible residue classes modulo M, a set of classes {[0], [1], ..., [M - 1]}
 //! more precisely, and equipping this set with addition and multiplication operations (operations
 //! are basically functions), the ring of integers modulo M (residue classes) is formed.
-//! This ring is commonly denoted as Z/nZ where n the is modulo. Mentioned binary operations
-//! are well-defined due to the fact that congruence relation is an equivalence relation. If the
+//! This ring is commonly denoted as Z/nZ where n is the modulo. Mentioned binary operations
+//! are well-defined due to the fact that the congruence relation is an equivalence relation. If the
 //! modulo is a prime number, the ring becomes actually a field. These fields are more easier
-//! to work with since every nonzero elements have a multiplicative inverse.
+//! to work with since every nonzero element has a multiplicative inverse.
 //!
-//! In the context of rings or fields, it's meaningful to speak of equations and this library
+//! Now in the context of rings and fields, it's meaningful to speak of equations and this library
 //! implements solvers for linear and quadratic equations. Next follows few examples of linear
 //! equations of the form ax + b = c (mod M).
 //!
