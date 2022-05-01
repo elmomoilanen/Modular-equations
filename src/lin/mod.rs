@@ -11,7 +11,7 @@ use crate::{
 };
 use num::iter;
 
-/// A type for linear equations with all term being unsigned.
+/// Type for linear equations with only unsigned terms.
 ///
 /// Linear modular equations are of the form ax + b = c (mod n) where
 /// terms `a`, `b` and `c` must be nonnegative for this type. Also modulo `n`
@@ -24,11 +24,11 @@ pub struct LinEq<T: UInt> {
     pub modu: T,
 }
 
-/// A type for linear equations with all terms except modulo being signed.
+/// Type for linear equations with unsigned modulo and signed other terms.
 ///
 /// Linear modular equations are of the form ax + b = c (mod n) where
 /// terms `a`, `b` and `c` are signed for this type. Modulo `n` must be
-/// an unsigned type, compatible to the signed type, e.g. u32 if signed type
+/// an unsigned type but compatible to the signed type, e.g. u32 if signed type
 /// is i32, and strictly larger than one as its value. Solve method of this type
 /// will panic if the modulo `n` doesn't satisfy this requirement.
 pub struct LinEqSigned<S: Int, T: UInt> {
@@ -41,7 +41,6 @@ pub struct LinEqSigned<S: Int, T: UInt> {
 impl<T: UInt> LinEq<T> {
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() {
-            // smallest accepted modulo equals two
             return None;
         }
 
@@ -54,7 +53,6 @@ impl<T: UInt> LinEq<T> {
         let gcd_am = T::gcd_mod(self.a, self.modu);
 
         if c % gcd_am > T::zero() {
-            // gcd(a, modu) doesn't divide c, no solution
             return None;
         }
 

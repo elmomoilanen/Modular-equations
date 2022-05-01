@@ -27,17 +27,14 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     }
 
     fn mult_mod_unsafe(mut x: T, mut y: T, modu: T) -> T {
-        let zero = T::zero();
-        let one = T::one();
-
-        if x == zero || y == zero {
-            return zero;
+        if x == T::zero() || y == T::zero() {
+            return T::zero();
         }
 
-        let mut res = zero;
+        let mut res = T::zero();
 
-        while y > zero {
-            if y & one == one {
+        while y > T::zero() {
+            if y & T::one() == T::one() {
                 res = Self::add_mod_unsafe(res, x, modu);
             }
             y = y.unsigned_shr(1);
@@ -48,17 +45,14 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     }
 
     fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
-        let zero = T::zero();
-        let one = T::one();
-
-        if base == zero {
-            return zero;
+        if base == T::zero() {
+            return base;
         }
 
-        let mut res = one;
+        let mut res = T::one();
 
-        while ex > zero {
-            if ex & one == one {
+        while ex > T::zero() {
+            if ex & T::one() == T::one() {
                 res = Self::mult_mod_unsafe(res, base, modu);
             }
             ex = ex.unsigned_shr(1);
@@ -67,9 +61,30 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
 
         res
     }
+
+    fn exp_mod_unsafe_u128(mut base: T, mut ex: u128, modu: T) -> T {
+        if base == T::zero() {
+            return base;
+        }
+
+        let mut res = T::one();
+
+        while ex > 0 {
+            if ex & 1 == 1 {
+                res = Self::mult_mod_unsafe(res, base, modu);
+            }
+            ex >>= 1;
+            base = Self::mult_mod_unsafe(base, base, modu);
+        }
+
+        res
+    }
 }
 
-pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
+pub trait Arith<T>: CoreArith<T>
+where
+    T: PrimInt + Unsigned + From<u8>,
+{
     fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::add_mod_unsafe(x, y, modu)
@@ -103,9 +118,7 @@ pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
     }
 
     fn gcd_mod(mut x: T, mut y: T) -> T {
-        let zero = T::zero();
-
-        if x == zero || y == zero {
+        if x == T::zero() || y == T::zero() {
             return x | y;
         }
 
@@ -118,24 +131,21 @@ pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
                 mem::swap(&mut x, &mut y);
             }
             y = y - x;
-            if y == zero {
+            if y == T::zero() {
                 break x.unsigned_shl(shift);
             }
         }
     }
 
     fn multip_inv(mut x: T, modu: T) -> T {
-        let zero = T::zero();
-        let one = T::one();
-
         if x >= modu {
             x = x % modu;
         }
 
         let (mut rem, mut rem_new) = (modu, x);
-        let (mut inv, mut inv_new) = (zero, one);
+        let (mut inv, mut inv_new) = (T::zero(), T::one());
 
-        while rem_new > zero {
+        while rem_new > T::zero() {
             let quo = rem / rem_new;
 
             let rem_temp = rem_new;
@@ -147,9 +157,9 @@ pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
             inv = inv_temp;
         }
 
-        if rem > one {
+        if rem > T::one() {
             // inverse doesn't exist, gcd(x, modu) > 1
-            return zero;
+            return T::zero();
         }
 
         inv
@@ -160,31 +170,28 @@ pub trait Arith<T: PrimInt + Unsigned + From<u8>>: CoreArith<T> {
             x = x % n;
         }
 
-        let (zero, one) = (T::zero(), T::one());
-        let (three, five, seven) = (3.into(), 5.into(), 7.into());
+        let mut par_t = 1;
 
-        let mut param_t = 1;
-
-        while x > zero {
-            while x & one == zero {
+        while x > T::zero() {
+            while x & T::one() == T::zero() {
                 x = x.signed_shr(1);
 
-                let param_r = n & seven;
-                if param_r == three || param_r == five {
-                    param_t = -param_t;
+                let par_r = n & 7.into();
+                if par_r == 3.into() || par_r == 5.into() {
+                    par_t = -par_t;
                 }
             }
 
             mem::swap(&mut x, &mut n);
 
-            if (x & three) == three && (n & three) == three {
-                param_t = -param_t;
+            if (x & 3.into()) == 3.into() && (n & 3.into()) == 3.into() {
+                par_t = -par_t;
             }
             x = x % n;
         }
 
-        if n == one {
-            param_t
+        if n == T::one() {
+            par_t
         } else {
             0
         }

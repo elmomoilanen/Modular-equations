@@ -23,7 +23,7 @@ where
             assert_eq!(sols.len(), sols_corr.len());
 
             for (elem_l, elem_r) in sols.iter().zip(sols_corr.iter()) {
-                assert_eq!(*elem_l, *elem_r, "left: {}, right: {}", *elem_l, *elem_r);
+                assert_eq!(*elem_l, *elem_r, "x: {}, x_corr: {}", *elem_l, *elem_r);
             }
         }
         None => assert!(false, "x_corr: {:?}, x: None", sols_corr),
@@ -34,7 +34,7 @@ where
 fn eq_small_type_uniq_sol() {
     let modu: u8 = 11;
 
-    // [a, b, c, res]: ax + b = c (mod modu)
+    // [a, b, c, res]: ax + b = c (mod modu), res solution
     let test_cases: [[u8; 4]; 5] = [
         [2, 3, 1, 10],
         [2, 3, 10, 9],
@@ -60,7 +60,7 @@ fn eq_small_type_uniq_sol() {
 fn eq_small_signed_type_uniq_sol() {
     let modu: u8 = 7;
 
-    // (a, b, c, res): ax + b = c (mod modu)
+    // (a, b, c, res): ax + b = c (mod modu), res solution
     let test_cases: [(i8, i8, i8, u8); 5] = [
         (-1, -1, 3, 3),
         (-127, -125, -99, 2),
@@ -86,7 +86,7 @@ fn eq_small_signed_type_uniq_sol() {
 fn eq_small_type_max_mod_uniq_sol() {
     let modu: u8 = u8::MAX;
 
-    // [a, b, c, res]: ax + b = c (mod modu)
+    // [a, b, c, res]: ax + b = c (mod modu), res solution
     let test_cases: [[u8; 4]; 5] = [
         [2, 0, 101, 178],
         [133, 78, 155, 14],
@@ -112,7 +112,7 @@ fn eq_small_type_max_mod_uniq_sol() {
 fn eq_small_signed_type_max_mod_uniq_sol() {
     let modu: u8 = u8::MAX;
 
-    // (a, b, c, res): ax + b = c (mod modu)
+    // (a, b, c, res): ax + b = c (mod modu), res solution
     let test_cases: [(i8, i8, i8, u8); 5] = [
         (-127, -127, 1, 1),
         (-124, -79, 77, 81),
@@ -195,7 +195,7 @@ fn eq_small_signed_type_multiple_sols() {
 
 #[test]
 fn eq_small_type_no_sol() {
-    // [a, b, c, modu]: ax + b = c (mod modu)
+    // [a, b, c, modu]: ax + b = c (mod modu), res solution
     let test_cases: [[u8; 4]; 3] = [[3, 1, 254, 255], [2, 0, 3, 8], [200, 31, 50, 200]];
 
     for test in test_cases.iter() {
@@ -214,7 +214,7 @@ fn eq_small_type_no_sol() {
 
 #[test]
 fn eq_misc_uniq_sol() {
-    // (a, b, c, modu, res): ax + b = c (mod modu)
+    // (a, b, c, modu, res): ax + b = c (mod modu), res solution
     let test_cases: [(i64, i64, i64, u64, u64); 5] = [
         (-9_832_503_233, 235_232_447, 653_245_724, 7919, 1395),
         (
@@ -258,7 +258,7 @@ fn eq_misc_uniq_sol() {
 fn eq_large_type_max_modu_uniq_sol() {
     let modu: u128 = u128::MAX;
 
-    // [a, b, c, res]: ax + b = c (mod modu)
+    // [a, b, c, res]: ax + b = c (mod modu), res solution
     let test_cases: [[u128; 4]; 3] = [
         [7, 5, 0, 194_447_066_811_964_836_264_785_489_961_010_406_545],
         [
@@ -292,7 +292,7 @@ fn eq_large_type_max_modu_uniq_sol() {
 fn eq_large_signed_type_max_modu_uniq_sol() {
     let modu: u128 = u128::MAX;
 
-    // (a, b, c, res): ax + b = c (mod modu)
+    // (a, b, c, res): ax + b = c (mod modu), res solution
     let test_cases: [(i128, i128, i128, u128); 3] = [
         (
             -44_543_623_469_468_494_086_238_567_586_756_668_237,
