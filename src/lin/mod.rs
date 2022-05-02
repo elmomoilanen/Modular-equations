@@ -1,7 +1,7 @@
 //! Implements a solver for linear modular equations.
 //!
 //! Modular linear equations are of the form ax + b = c (mod n) where
-//! every term or element is a residue class [*] belonging to the ring
+//! every term or element is a residue class \[*\] belonging to the ring
 //! of integers Z/nZ. Modulo term `n` must be a positive integer
 //! and strictly larger than one.
 //!
@@ -39,6 +39,11 @@ pub struct LinEqSigned<S: Int, T: UInt> {
 }
 
 impl<T: UInt> LinEq<T> {
+    /// Solve linear modular equation ax + b = c (mod modu).
+    ///
+    /// There will be 0-N solutions x, 0 case occurring when gcd(a, modu) doesn't divide
+    /// the c parameter and on the contrary, magnitude of N depending on the equation.
+    /// If gcd(a, modu) == 1, there will be a unique solution.
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() {
             return None;
@@ -76,6 +81,16 @@ where
     S: Int + SignCast<S, T>,
     T: UInt + TryFrom<S>,
 {
+    /// Solve linear modular equation for signed type terms.
+    ///
+    /// This method will try to cast the signed terms to unsigned such that
+    /// after the cast they will represent the smallest nonnegative
+    /// integers of their corresponding residue classes (modulo modu). If some
+    /// of the casts fails, this method will panic but this should only occur
+    /// for S::min_value() value of the signed type S.
+    ///
+    /// After the cast to unsigned, the `solve` method of struct `LinEq` will
+    /// be called to solve the equation.
     pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {
             Some(a) => a,

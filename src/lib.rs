@@ -76,11 +76,11 @@ use std::fmt::{Debug, Display};
 
 use num::{PrimInt, Signed, Unsigned};
 
-mod arith;
-mod factor;
-mod lin;
-mod prime;
-mod quad;
+pub mod arith;
+pub mod factor;
+pub mod lin;
+pub mod prime;
+pub mod quad;
 
 pub trait UInt: PrimInt + Unsigned + Display + Debug + From<u8> + Into<u128> {}
 

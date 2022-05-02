@@ -1,8 +1,12 @@
 //! Implements primality testing for odd natural numbers.
 //!
 //! Primality testing is separated in the following manner:
-//! - Numbers having 64 or less bits are cheched with the Miller-Rabin test.
-//! - Larger numbers up to 128 bits are cheched with the strong Baillie-PSW test.
+//! - Run first a small check with first primes up to 61 (smallest prime good for MR test is 67).
+//! - Numbers up to 64 bits are cheched with the Miller-Rabin test.
+//! - Larger numbers up to the 128 bits are cheched with the strong Baillie-PSW test.
+//!
+//! Baillie-PSW primality test is not deterministic but there are not known counterexamples in the range
+//! this program uses (numbers up to 128 bits).
 //!
 use std::cmp::Ordering;
 use std::convert::{Into, TryInto};
@@ -13,10 +17,9 @@ use crate::{arith::Arith, UInt};
 
 struct LucasParams<T: UInt>(T, T, T);
 
+/// Check whether a positive natural number `num` is an odd prime.
 pub fn is_odd_prime<T: UInt>(num: T) -> bool {
-    let (zero, one) = (T::zero(), T::one());
-
-    if num <= one || num & one == zero {
+    if num <= T::one() || num & T::one() == T::zero() {
         return false;
     }
 
@@ -51,6 +54,7 @@ fn is_sure_odd_small_prime<T: UInt>(num: T) -> bool {
         if prm > num / prm {
             return true;
         }
+
         if num % prm == T::zero() {
             return false;
         }
@@ -60,8 +64,7 @@ fn is_sure_odd_small_prime<T: UInt>(num: T) -> bool {
 }
 
 fn is_prime_mr<T: UInt>(num: T, bases: &[T]) -> bool {
-    let one = T::one();
-    let num_even = num - one;
+    let num_even = num - T::one();
 
     let pow = num_even.trailing_zeros();
     let num_odd = num_even.unsigned_shr(pow);
@@ -70,7 +73,7 @@ fn is_prime_mr<T: UInt>(num: T, bases: &[T]) -> bool {
     for base in bases.iter() {
         let mut q = T::exp_mod(*base, num_odd, num);
 
-        if q == one || q == num_even {
+        if q == T::one() || q == num_even {
             continue;
         }
 
@@ -152,9 +155,9 @@ fn select_lucas_params(num: u128) -> Option<LucasParams<u128>> {
 }
 
 fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
-    let num_even = num + 1; // cannot be done with u128::MAX
+    let num_even = num + 1; // not allowed with u128::MAX but Fermat's test should have handled it
     let num_odd = num_even.unsigned_shr(num_even.trailing_zeros());
-    // num_even = 2^pow * num_odd, for pow == num_even.trailing_zeros()
+    // num_even = 2^pow * num_odd, pow == num_even.trailing_zeros()
 
     let num_even_lead_zeros = num_even.leading_zeros();
 

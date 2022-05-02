@@ -70,7 +70,7 @@ impl<T: UInt> QuadEq<T> {
     }
 
     /// Solve equation (2ax + b)^2 = d (mod modu).
-    /// First, solve z^2 = d (mod modu), and then 2ax + b = z (mod modu).
+    /// First, solve z^2 = d (mod modu), and then 2ax + b = z (mod modu) for x.
     fn solve_quad_simple(&self) -> Option<Vec<T>> {
         let z = match self.solve_quad_residue_odd_prime_mod() {
             Some(z) if !z.is_empty() => z,
