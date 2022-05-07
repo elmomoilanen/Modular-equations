@@ -4,12 +4,15 @@
 //! are less than the modulus `modu`, or in other words the operands are the
 //! smallest nonnegative representatives of their residue class.
 //!
+use std::cmp::{self, Ordering};
 use std::convert::{From, TryFrom};
-use std::{cmp, mem};
+use std::mem;
 
 use num::{PrimInt, Signed, Unsigned};
 
 pub trait CoreArith<T: PrimInt + Unsigned> {
+    ///
+    ///
     fn add_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x < modu - y {
             x + y
@@ -18,6 +21,8 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
+    ///
+    ///
     fn sub_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x >= y {
             x - y
@@ -26,6 +31,8 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
+    ///
+    ///
     fn mult_mod_unsafe(mut x: T, mut y: T, modu: T) -> T {
         if x == T::zero() || y == T::zero() {
             return T::zero();
@@ -37,6 +44,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
             if y & T::one() == T::one() {
                 res = Self::add_mod_unsafe(res, x, modu);
             }
+
             y = y.unsigned_shr(1);
             x = Self::add_mod_unsafe(x, x, modu);
         }
@@ -44,6 +52,8 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         res
     }
 
+    ///
+    ///
     fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
         if base == T::zero() {
             return base;
@@ -55,6 +65,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
             if ex & T::one() == T::one() {
                 res = Self::mult_mod_unsafe(res, base, modu);
             }
+
             ex = ex.unsigned_shr(1);
             base = Self::mult_mod_unsafe(base, base, modu);
         }
@@ -62,6 +73,8 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         res
     }
 
+    ///
+    ///
     fn exp_mod_unsafe_u128(mut base: T, mut ex: u128, modu: T) -> T {
         if base == T::zero() {
             return base;
@@ -73,6 +86,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
             if ex & 1 == 1 {
                 res = Self::mult_mod_unsafe(res, base, modu);
             }
+
             ex >>= 1;
             base = Self::mult_mod_unsafe(base, base, modu);
         }
@@ -85,6 +99,8 @@ pub trait Arith<T>: CoreArith<T>
 where
     T: PrimInt + Unsigned + From<u8>,
 {
+    ///
+    ///
     fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::add_mod_unsafe(x, y, modu)
@@ -93,6 +109,8 @@ where
         }
     }
 
+    ///
+    ///
     fn sub_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::sub_mod_unsafe(x, y, modu)
@@ -101,6 +119,8 @@ where
         }
     }
 
+    ///
+    ///
     fn mult_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::mult_mod_unsafe(x, y, modu)
@@ -109,6 +129,8 @@ where
         }
     }
 
+    ///
+    ///
     fn exp_mod(base: T, ex: T, modu: T) -> T {
         if base < modu {
             Self::exp_mod_unsafe(base, ex, modu)
@@ -117,6 +139,8 @@ where
         }
     }
 
+    ///
+    ///
     fn gcd_mod(mut x: T, mut y: T) -> T {
         if x == T::zero() || y == T::zero() {
             return x | y;
@@ -137,6 +161,8 @@ where
         }
     }
 
+    ///
+    ///
     fn multip_inv(mut x: T, modu: T) -> T {
         if x >= modu {
             x = x % modu;
@@ -165,6 +191,8 @@ where
         inv
     }
 
+    ///
+    ///
     fn jacobi_symbol(mut x: T, mut n: T) -> i8 {
         if x >= n {
             x = x % n;
@@ -196,6 +224,21 @@ where
             0
         }
     }
+
+    ///
+    ///
+    fn trunc_square(x: T) -> T {
+        match x.cmp(&T::zero()) {
+            Ordering::Greater => {
+                if x < T::max_value() / x {
+                    x * x
+                } else {
+                    T::zero()
+                }
+            }
+            _ => T::zero(),
+        }
+    }
 }
 
 pub trait SignCast<S, T>
@@ -203,6 +246,8 @@ where
     S: PrimInt + Signed,
     T: PrimInt + Unsigned + TryFrom<S>,
 {
+    ///
+    ///
     fn cast_to_unsigned(x: S, modu: T) -> Option<T> {
         if x > S::zero() {
             return match T::try_from(x) {

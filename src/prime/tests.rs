@@ -13,6 +13,7 @@ fn is_prime_first_odd_primes() {
 
 #[test]
 fn is_prime_small_composites() {
+    // 2 is not composite but it's also not an odd prime
     let test_numbers: [u8; 8] = [0, 1, 2, 4, 8, 15, 25, u8::MAX];
 
     for number in test_numbers.iter() {
@@ -176,4 +177,35 @@ fn is_prime_large_composites() {
     for comp in test_composites.iter() {
         assert_eq!(is_odd_prime(*comp), false, "{}", *comp);
     }
+}
+
+#[test]
+fn is_prime_range_containing_two_primes() {
+    let start_num = (i128::MAX - 511) as u128;
+    let stop_num = (i128::MAX - 505) as u128;
+
+    let prime_count = (start_num..stop_num).filter(|x| is_odd_prime(*x)).count();
+
+    assert_eq!(prime_count, 2);
+}
+
+#[test]
+fn is_prime_range_containing_three_primes() {
+    let start_num = u128::pow(2, 119) - 801;
+    let stop_num = u128::pow(2, 119) - 744;
+
+    let prime_count = (start_num..stop_num).filter(|x| is_odd_prime(*x)).count();
+
+    assert_eq!(prime_count, 3);
+}
+
+#[test]
+fn is_prime_range_containing_no_primes() {
+    let start_num = u128::pow(2, 107) - 170;
+    let stop_num = u128::pow(2, 107) - 1;
+
+    // range is exclusive, the stop number is prime but not included here
+    let prime_count = (start_num..stop_num).filter(|x| is_odd_prime(*x)).count();
+
+    assert_eq!(prime_count, 0);
 }

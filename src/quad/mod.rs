@@ -1,11 +1,12 @@
 //! Implements a solver for quadratic modular equations.
 //!
 //! Modular quadratic equations are of the form ax^2 + bx + c = d (mod n) where
-//! every term or element is a residue class [*] belonging to the ring of integers
+//! every term or element is a residue class \[*\] belonging to the ring of integers
 //! Z/nZ. Modulo term `n` must be a positive integer and strictly larger than one.
 //!
 use crate::{
     arith::{Arith, CoreArith, SignCast},
+    factor::Factors,
     lin::LinEq,
     prime, Int, UInt,
 };
@@ -41,22 +42,23 @@ pub struct QuadEqSigned<S: Int, T: UInt> {
     pub modu: T,
 }
 
-impl<T: UInt> QuadEq<T> {
+impl<T: 'static + UInt> QuadEq<T> {
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() {
             return None;
         }
 
-        let zero = T::zero();
         let mut quad = QuadEq { ..*self };
 
-        if quad.c > zero {
+        if quad.c > T::zero() {
             quad.d = T::sub_mod(quad.d, quad.c, quad.modu);
             quad.c = T::zero();
         }
 
         match prime::is_odd_prime(quad.modu) {
-            true if quad.a == T::one() && quad.b == zero => quad.solve_quad_residue_odd_prime_mod(),
+            true if quad.a == T::one() && quad.b == T::zero() => {
+                quad.solve_quad_residue_odd_prime_mod()
+            }
             true => {
                 // modify to (2ax + b)^2 = b^2 + 4ad' (mod modu), d' = d - c
                 let b2 = T::mult_mod(quad.b, quad.b, quad.modu);
@@ -65,7 +67,14 @@ impl<T: UInt> QuadEq<T> {
                 quad.d = T::add_mod_unsafe(b2, ad, quad.modu);
                 quad.solve_quad_simple()
             }
-            _ => None,
+            false => {
+                let mut factors = Factors::new(quad.modu);
+
+                factors.factorize();
+                let _factor_repr = factors.prime_factor_repr();
+
+                None
+            }
         }
     }
 
@@ -194,7 +203,7 @@ impl<T: UInt> QuadEq<T> {
 impl<T, S> QuadEqSigned<S, T>
 where
     S: Int + SignCast<S, T>,
-    T: UInt + TryFrom<S>,
+    T: 'static + UInt + TryFrom<S>,
 {
     pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {

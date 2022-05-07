@@ -11,15 +11,15 @@
 //! as x ≡ y (mod M) and importantly this relation is an equivalence relation.
 //!
 //! Finally, the modular arithmetic system is constructed such that the elements of it
-//! are so called residue or congruence classes [x], where one class [x] is consisting
+//! are so called residue or congruence classes \[x\], where one class \[x\] is consisting
 //! of all the integers congruent to x modulo M, or in other words all integers of the form
 //! {..., x - M, x, x + M, ...} = {x + k * M}, k being a integer belonging to Z. Hence,
 //! in principle, all of these integers {x + k * M} are valid representatives of their
-//! residue class [x] but the common way is to use the smallest nonnegative integer (modulo M)
+//! residue class \[x\] but the common way is to use the smallest nonnegative integer (modulo M)
 //! to represent the residue class. As the congruence relation is an equivalence relation,
 //! every integer can belong to only one residue class modulo M.
 //!
-//! When listing all possible residue classes modulo M, a set of classes {[0], [1], ..., [M - 1]}
+//! When listing all possible residue classes modulo M, a set of classes {\[0\], \[1\], ..., \[M - 1\]}
 //! more precisely, and equipping this set with addition and multiplication operations (operations
 //! are basically functions), the ring of integers modulo M (residue classes) is formed.
 //! This ring is commonly denoted as Z/nZ where n is the modulo. Mentioned binary operations
@@ -64,7 +64,7 @@
 //! If any of the coefficients is signed, one must use the signed type equation
 //! `LinEqSigned`. Notice however that in this case, the modulo must still be unsigned.
 //! Every negative integer in the ring can be turned to the smallest nonnegative
-//! representative of the corresponding residue class [x]. With respect to this there
+//! representative of the corresponding residue class \[x\]. With respect to this there
 //! are few technical restrictions, the first being that the used signed type (e.g. i32)
 //! must have the arith::SignCast trait implemented and that trait requires the signed
 //! and unsigned types to be compatible (i.e., same size e.g. i32 and u32). In addition,
@@ -73,18 +73,26 @@
 //!
 use std::convert::{From, Into};
 use std::fmt::{Debug, Display};
+use std::marker::{Send, Sync};
 
-use num::{PrimInt, Signed, Unsigned};
+use num::{integer::Roots, PrimInt, Signed, Unsigned};
 
-pub mod arith;
-pub mod factor;
-pub mod lin;
-pub mod prime;
-pub mod quad;
+mod arith;
+mod elliptic;
+mod factor;
+mod lin;
+mod prime;
+mod quad;
 
-pub trait UInt: PrimInt + Unsigned + Display + Debug + From<u8> + Into<u128> {}
+pub trait UInt:
+    PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Send + Sync
+{
+}
 
-impl<T> UInt for T where T: PrimInt + Unsigned + Display + Debug + From<u8> + Into<u128> {}
+impl<T> UInt for T where
+    T: PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Send + Sync
+{
+}
 
 impl<T> arith::CoreArith<T> for T where T: UInt {}
 impl<T> arith::Arith<T> for T where T: UInt {}

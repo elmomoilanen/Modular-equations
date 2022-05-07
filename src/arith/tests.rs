@@ -407,6 +407,37 @@ fn jacobi_symbol_large_operands() {
 }
 
 #[test]
+fn trunc_square_mid_type() {
+    let test_cases: [[u64; 2]; 4] = [
+        [0, 0],
+        [2, 4],
+        [u32::MAX as u64, 18_446_744_065_119_617_025],
+        [u32::MAX as u64 + 1, 0],
+    ];
+
+    for case in test_cases.iter() {
+        assert_eq!(u64::trunc_square(case[0]), case[1]);
+    }
+}
+
+#[test]
+fn trunc_square_large_type() {
+    let test_cases: [[u128; 2]; 4] = [
+        [0, 0],
+        [3, 9],
+        [
+            u64::MAX as u128,
+            340_282_366_920_938_463_426_481_119_284_349_108_225,
+        ],
+        [u64::MAX as u128 + 1, 0],
+    ];
+
+    for case in test_cases.iter() {
+        assert_eq!(u128::trunc_square(case[0]), case[1]);
+    }
+}
+
+#[test]
 fn sign_cast_success_small_type() {
     let modu = 5;
     let i8_min_valid = i8::MIN + 1;
