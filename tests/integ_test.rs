@@ -2,7 +2,7 @@
 //!
 //! Test linear and quadratic equations.
 //!
-use modular_arithmetic::{LinEq, LinEqSigned};
+use modular_equations::{LinEq, LinEqSigned};
 
 #[test]
 fn linear_equation() {

@@ -32,7 +32,7 @@
 //! equations of the form ax + b = c (mod M).
 //!
 //! ```
-//! use modular_arithmetic::LinEq;
+//! use modular_equations::LinEq;
 //!
 //! let lin_eq = LinEq::<u32> {
 //!     a: 13,
@@ -49,7 +49,7 @@
 //! Following linear equation doesn't have solution
 //!
 //! ```
-//! use modular_arithmetic::LinEqSigned;
+//! use modular_equations::LinEqSigned;
 //!
 //! let lin_eq = LinEqSigned::<i8, u8> {
 //!     a: -3,

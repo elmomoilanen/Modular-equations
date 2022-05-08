@@ -3,8 +3,8 @@
 //!
 use std::{env, process};
 
-extern crate modular_arithmetic;
-use modular_arithmetic::{LinEqSigned, QuadEqSigned, UInt};
+extern crate modular_equations;
+use modular_equations::{LinEqSigned, QuadEqSigned, UInt};
 
 mod parser;
 use parser::EquaKind;
