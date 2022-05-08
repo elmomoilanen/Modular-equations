@@ -11,8 +11,10 @@ use std::mem;
 use num::{PrimInt, Signed, Unsigned};
 
 pub trait CoreArith<T: PrimInt + Unsigned> {
+    /// Unsafe modular addition.
     ///
-    ///
+    /// Two's complement wrapping occurs if the arguments
+    /// `x` and `y` are not smaller than `modu`.
     fn add_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x < modu - y {
             x + y
@@ -21,8 +23,10 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
+    /// Unsafe modular subtraction.
     ///
-    ///
+    /// Two's complement wrapping occurs if the arguments
+    /// `x` and `y` are not smaller than `modu`.
     fn sub_mod_unsafe(x: T, y: T, modu: T) -> T {
         if x >= y {
             x - y
@@ -31,8 +35,10 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
+    /// Unsafe modular multiplication.
     ///
-    ///
+    /// Two's complement wrapping occurs if the argument
+    /// `x` is not smaller than `modu`.
     fn mult_mod_unsafe(mut x: T, mut y: T, modu: T) -> T {
         if x == T::zero() || y == T::zero() {
             return T::zero();
@@ -52,8 +58,9 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         res
     }
 
+    /// Unsafe modular exponentation.
     ///
-    ///
+    /// Uses directly unsafe modular multiplication.
     fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
         if base == T::zero() {
             return base;
@@ -73,8 +80,9 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         res
     }
 
+    /// Unsafe modular exponentation with fixed exponent type.
     ///
-    ///
+    /// Uses directly unsafe modular multiplication.
     fn exp_mod_unsafe_u128(mut base: T, mut ex: u128, modu: T) -> T {
         if base == T::zero() {
             return base;
@@ -99,8 +107,7 @@ pub trait Arith<T>: CoreArith<T>
 where
     T: PrimInt + Unsigned + From<u8>,
 {
-    ///
-    ///
+    /// Modular addition.
     fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::add_mod_unsafe(x, y, modu)
@@ -109,8 +116,7 @@ where
         }
     }
 
-    ///
-    ///
+    /// Modular subtraction.
     fn sub_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::sub_mod_unsafe(x, y, modu)
@@ -119,8 +125,7 @@ where
         }
     }
 
-    ///
-    ///
+    /// Modular multiplication.
     fn mult_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::mult_mod_unsafe(x, y, modu)
@@ -129,8 +134,7 @@ where
         }
     }
 
-    ///
-    ///
+    /// Modular exponentiation.
     fn exp_mod(base: T, ex: T, modu: T) -> T {
         if base < modu {
             Self::exp_mod_unsafe(base, ex, modu)
@@ -139,8 +143,7 @@ where
         }
     }
 
-    ///
-    ///
+    /// Greatest common divisor for `x` and `y`.
     fn gcd_mod(mut x: T, mut y: T) -> T {
         if x == T::zero() || y == T::zero() {
             return x | y;
@@ -161,8 +164,11 @@ where
         }
     }
 
+    /// Multiplicative inverse of `x`.
     ///
-    ///
+    /// If the inverse `x^(-1)` exists, that is
+    /// x * x^(-1) = 1 (mod modu), it's returned and
+    /// otherwise the return value will be zero.
     fn multip_inv(mut x: T, modu: T) -> T {
         if x >= modu {
             x = x % modu;
@@ -191,8 +197,9 @@ where
         inv
     }
 
+    /// Compute Jacobi symbol `(x|n)`.
     ///
-    ///
+    /// Return value will be one of -1, 0 or 1.
     fn jacobi_symbol(mut x: T, mut n: T) -> i8 {
         if x >= n {
             x = x % n;
@@ -225,8 +232,10 @@ where
         }
     }
 
+    /// Truncated square, `x * x`, for `x`.
     ///
-    ///
+    /// In other words wrapping isn't allowed and
+    /// zero will be returned in that case.
     fn trunc_square(x: T) -> T {
         match x.cmp(&T::zero()) {
             Ordering::Greater => {
@@ -246,8 +255,13 @@ where
     S: PrimInt + Signed,
     T: PrimInt + Unsigned + TryFrom<S>,
 {
+    /// Cast `x` from signed type S to unsigned type T.
     ///
+    /// This can be done since the `x` can always be given
+    /// as the smallest nonnegative representative of its
+    /// residue class.
     ///
+    /// Cast fails if abs(`x`) cannot be computed.
     fn cast_to_unsigned(x: S, modu: T) -> Option<T> {
         if x > S::zero() {
             return match T::try_from(x) {

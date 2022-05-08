@@ -213,7 +213,6 @@ fn wheel_factorization_as_worker() {
     let maybe_factors_cln = Arc::clone(&maybe_factors);
 
     factor::Factors::wheel_worker(maybe_factors_cln, test_num, tx);
-    // wait the wheel worker to finish factorization
 
     match rx.recv() {
         Ok(true) => {
@@ -311,16 +310,18 @@ fn factorize_semiprimes() {
 fn factorize_large_semiprimes() {
     let mut factors = factor::Factors::new(2u128);
 
-    let test_num: [u128; 4] = [
+    let test_num: [u128; 5] = [
         2_776_889_953_055_853_600_532_696_901,
         90_124_258_835_295_998_242_413_094_252_351,
+        7_060_005_655_815_754_299_976_961_394_452_809,
         2_082_064_493_491_567_088_228_629_031_592_644_077,
         340_282_366_920_938_463_463_374_607_431_768_211_451,
     ];
 
-    let correct_factors: [[u128; 2]; 4] = [
+    let correct_factors: [[u128; 2]; 5] = [
         [11_560_410_863_851, 240_206_856_465_551],
         [18_812_497_391, 4_790_658_941_348_846_576_561],
+        [6_988_699_669_998_001, 1_010_203_040_506_070_809],
         [434_609_209_084_157, 4_790_658_941_348_846_576_561],
         [169_909, 2_002_733_033_099_709_041_094_789_607_565_039],
     ];

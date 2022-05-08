@@ -280,11 +280,7 @@ impl<T: 'static + UInt> Factors<T> {
     ) {
         let mut curve_count = 1;
 
-        loop {
-            if num == T::one() || curve_count > MAX_ELLIPTIC_CURVES {
-                break;
-            }
-
+        while num > T::one() && curve_count <= MAX_ELLIPTIC_CURVES {
             let maybe_factor = EllipticCurve::compute_maybe_factor_from_curve(num);
 
             if maybe_factor > T::one() && maybe_factor < num {
@@ -314,10 +310,10 @@ impl<T: 'static + UInt> Factors<T> {
                     num = (*factors).num;
                 }
             } else if curve_count & 31 == 0 {
+                // update factored number `num`
                 let factors = maybe_factors.lock().unwrap();
                 num = (*factors).num;
             }
-
             curve_count += 1;
         }
 

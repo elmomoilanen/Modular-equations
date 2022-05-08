@@ -1,3 +1,7 @@
+//! Integration tests.
+//!
+//! Test linear and quadratic equations.
+//!
 use modular_arithmetic::{LinEq, LinEqSigned};
 
 #[test]

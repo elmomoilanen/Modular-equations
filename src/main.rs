@@ -1,4 +1,4 @@
-//!
+//! TODO: CLI documentation
 //!
 //!
 use std::{env, process};
@@ -23,6 +23,7 @@ fn main() {
 
     match &equa {
         EquaKind::LinearI64(eq_lin) => print_sol(eq_lin.solve(), eq_lin.modu),
+        // TODO: complete quadratic cases
         EquaKind::QuadI64(_eq_quad) => (),
         EquaKind::LinearI128(eq_lin_large) => print_sol(eq_lin_large.solve(), eq_lin_large.modu),
         EquaKind::QuadI128(_eq_quad_large) => (),
