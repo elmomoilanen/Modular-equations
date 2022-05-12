@@ -23,7 +23,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
-    /// Unsafe modular subtraction.
+    /// Unsafe modular subtraction, `x` - `y`.
     ///
     /// Two's complement wrapping occurs if the arguments
     /// `x` and `y` are not smaller than `modu`.
@@ -166,9 +166,9 @@ where
 
     /// Multiplicative inverse of `x`.
     ///
-    /// If the inverse `x^(-1)` exists, that is
-    /// x * x^(-1) = 1 (mod modu), it's returned and
-    /// otherwise the return value will be zero.
+    /// If the inverse `x^(-1)` exists, meaning that
+    /// x * x^(-1) = 1 (mod modu) holds, it will be returned.
+    /// Otherwise the return value will be zero.
     fn multip_inv(mut x: T, modu: T) -> T {
         if x >= modu {
             x = x % modu;

@@ -84,35 +84,35 @@ impl<T: 'static + UInt> Factors<T> {
     /// can be directly produced from them.
     ///
     /// Hence, always call the `factorize` method prior calling this.
-    pub fn prime_factor_repr(&self) -> Vec<(T, T)> {
-        let mut prime_factor_repr = Vec::<(T, T)>::new();
+    pub fn prime_factor_repr(&self) -> Vec<(T, u8)> {
+        let mut prm_factor_repr = Vec::<(T, u8)>::new();
 
         let mut k = self.num;
-        let mut count = T::zero();
+        let mut count = 0;
         let mut prev_factor = T::zero();
 
         for factor in self.factors.iter().rev() {
             let curr_factor = *factor;
 
-            if curr_factor != prev_factor && count > T::zero() {
-                prime_factor_repr.push((prev_factor, count));
-                count = T::zero();
+            if curr_factor != prev_factor && count > 0 {
+                prm_factor_repr.push((prev_factor, count));
+                count = 0;
             }
 
-            count = count + T::one();
+            count += 1;
             k = k / curr_factor;
 
             prev_factor = curr_factor;
 
             if k == T::one() {
-                prime_factor_repr.push((prev_factor, count));
+                prm_factor_repr.push((prev_factor, count));
                 break;
             }
         }
 
-        prime_factor_repr.reverse();
+        prm_factor_repr.reverse();
 
-        prime_factor_repr
+        prm_factor_repr
     }
 
     fn factorize_until_completed(&mut self, mut num: T) {

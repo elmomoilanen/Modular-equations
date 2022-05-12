@@ -264,9 +264,11 @@ fn eq_small_type_odd_prime_mod() {
     // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
     // modu is odd prime and the equation has two solutions
 
-    let test_cases: [[u8; 7]; 8] = [
+    let test_cases: [[u8; 7]; 10] = [
         [3, 6, 1, 0, 19, 7, 10],
         [3, 6, 0, 18, 19, 7, 10],
+        [1, 0, 1, 0, 5, 2, 3],
+        [1, 3, 0, 1, 3, 1, 2],
         [1, 1, 0, 0, 7, 0, 6],
         [1, 1, 5, 0, 11, 2, 8],
         [2, 8, 2, 0, 23, 5, 14],
@@ -288,5 +290,65 @@ fn eq_small_type_odd_prime_mod() {
 
         let corr_sol = vec![test[5], test[6]];
         check_multiple_sols_correctness(quad_eq.solve(), &corr_sol, modu);
+    }
+}
+
+#[test]
+fn hensel_method_with_power_of_three() {
+    let quad_eq = QuadEq::<u8> {
+        a: 1,
+        b: 3,
+        c: 0,
+        d: 1,
+        modu: 3,
+    };
+
+    // quad_eq sols: 1, 2
+    let quad_sols: Vec<u8> = vec![1, 2];
+
+    // [x_1, x_2, prm_k]: lifted solutions x_1 and x_2 for modu^prm_k
+    let test_cases: [[u8; 3]; 3] = [
+        [1, 2, 1],  // normally for this Hensel's method wouldn't be used
+        [4, 2, 2],  // mod 9
+        [4, 20, 3], // mod 27
+    ];
+
+    for test in test_cases.iter() {
+        let correct_sols = vec![test[0], test[1]];
+        let modulo = quad_eq.modu.pow(test[2].into());
+
+        let lifted_sols = quad_eq.lift_with_hensel_method(quad_sols.clone(), test[2]);
+
+        check_multiple_sols_correctness(lifted_sols, &correct_sols, modulo);
+    }
+}
+
+#[test]
+fn hensel_method_with_power_of_five() {
+    let quad_eq = QuadEq::<u32> {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 4,
+        modu: 5,
+    };
+
+    // quad_eq sols: 2, 3
+    let quad_sols: Vec<u32> = vec![2, 3];
+
+    // [x_1, x_2, prm_k]: lifted solutions x_1 and x_2 for modu^prm_k
+    let test_cases: [(u32, u32, u8); 3] = [
+        (2, 3, 1),   // normally for this Hensel's method wouldn't be used
+        (2, 23, 2),  // mod 25
+        (2, 123, 3), // mod 125
+    ];
+
+    for test in test_cases.iter() {
+        let correct_sols = vec![test.0, test.1];
+        let modulo = quad_eq.modu.pow(test.2.into());
+
+        let lifted_sols = quad_eq.lift_with_hensel_method(quad_sols.clone(), test.2);
+
+        check_multiple_sols_correctness(lifted_sols, &correct_sols, modulo);
     }
 }

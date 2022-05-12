@@ -15,7 +15,7 @@ fn compare_arrays<T: UInt>(left_arr: &[T], right_arr: &[T]) {
     }
 }
 
-fn compare_arrays_of_tuples<T: UInt>(left_arr: &[(T, T)], right_arr: &[(T, T)]) {
+fn compare_arrays_of_tuples<T: UInt, U: UInt>(left_arr: &[(T, U)], right_arr: &[(T, U)]) {
     // right_arr can be larger as it might contain zero padding
     assert!(left_arr.len() <= right_arr.len());
 
@@ -430,7 +430,7 @@ fn prime_factor_repr() {
         2_699_302_794_582_910_996_440_074_437_437_656_779,
     ];
 
-    let correct_repr: [[(u128, u128); 5]; 5] = [
+    let correct_repr: [[(u128, u8); 5]; 5] = [
         [(2, 4), (3, 2), (5, 4), (269, 1), (0, 0)],
         [(2, 1), (3, 4), (6113, 1), (6599, 2), (7823, 1)],
         [(151, 3), (211, 4), (223, 1), (0, 0), (0, 0)],

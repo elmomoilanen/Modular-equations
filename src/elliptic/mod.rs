@@ -138,7 +138,7 @@ static BYTES_10K: [u8; BYTES_10K_LEN] = [
 /// Type to represent elliptic curves.
 ///
 /// Elliptic curves are considered in projective coordinates
-/// in Montgomery form b * y^2 * z = x^3 + a*x^2*z + x*z^2.
+/// in Montgomery form b*y^2*z = x^3 + a*x^2*z + x*z^2.
 ///
 /// The previous form is useful because it allows to compute
 /// elliptic point additions and doubling without the y-coordinate.

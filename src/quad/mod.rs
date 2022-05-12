@@ -65,20 +65,23 @@ impl<T: 'static + UInt> QuadEq<T> {
                 let ad = T::mult_mod(4.into(), T::mult_mod(quad.a, quad.d, quad.modu), quad.modu);
 
                 quad.d = T::add_mod_unsafe(b2, ad, quad.modu);
+
                 quad.solve_quad_simple()
             }
             false => {
                 let mut factors = Factors::new(quad.modu);
 
                 factors.factorize();
-                let _factor_repr = factors.prime_factor_repr();
+                // prime factor repr of `quad.modu`: [(p_1,k_1), ..., (p_n,k_n)] s.t.
+                // quad.modu = p_1^k_1 * ... * p_n^k_n holds
+                let prm_factor_repr = factors.prime_factor_repr();
 
-                None
+                quad.solve_quad_composite_mod(&prm_factor_repr)
             }
         }
     }
 
-    /// Solve equation (2ax + b)^2 = d (mod modu).
+    /// Solve equation (2ax + b)^2 = d (mod modu), where modu is an odd prime.
     /// First, solve z^2 = d (mod modu), and then 2ax + b = z (mod modu) for x.
     fn solve_quad_simple(&self) -> Option<Vec<T>> {
         let z = match self.solve_quad_residue_odd_prime_mod() {
@@ -197,6 +200,102 @@ impl<T: 'static + UInt> QuadEq<T> {
             par_t = T::mult_mod_unsafe(par_t, par_c, modu);
             res = T::mult_mod_unsafe(res, par_b, modu);
         }
+    }
+
+    /// Solve equation ax^2 + bx = d (mod modu) for composite modu.
+    fn solve_quad_composite_mod(&self, factor_repr: &[(T, u8)]) -> Option<Vec<T>> {
+        let modu_orig = self.modu;
+        let mut x_sols: Vec<(T, T)> = vec![];
+
+        let mut quad = QuadEq { ..*self };
+
+        for (prm_factor, prm_k) in factor_repr.iter() {
+            let total_modulo = (*prm_factor).pow((*prm_k).into());
+            quad.modu = *prm_factor;
+
+            let x_sub_sols = if quad.modu > 2.into() {
+                // modify to (2ax + b)^2 = b^2 + 4ad' (mod modu), d' = d - c and modu is now an odd prime
+                let b2 = T::mult_mod(quad.b, quad.b, quad.modu);
+                let ad = T::mult_mod(4.into(), T::mult_mod(quad.a, quad.d, quad.modu), quad.modu);
+
+                quad.d = T::add_mod_unsafe(b2, ad, quad.modu);
+
+                match quad.solve_quad_simple() {
+                    Some(x_sols) if *prm_k <= 1 => Some(x_sols),
+                    Some(x_sols) => quad.lift_with_hensel_method(x_sols, *prm_k),
+                    None => None,
+                }
+            } else {
+                quad.solve_quad_mod_two()
+            };
+
+            match x_sub_sols {
+                None => return None,
+                Some(sub_sols) => {
+                    for x_sol in sub_sols {
+                        x_sols.push((x_sol, total_modulo));
+                    }
+                }
+            }
+        }
+
+        quad.modu = modu_orig;
+
+        if factor_repr.len() > 1 {
+            // crt(x_sols, quad_modu)
+            None
+        } else {
+            Some(x_sols.iter().map(|&x_tuple| x_tuple.0).collect())
+        }
+    }
+
+    ///
+    fn solve_quad_mod_two(&self) -> Option<Vec<T>> {
+        None
+    }
+
+    /// Lift root x of quadratic polynomial f(x) = 0 (mod prm^k-1) to a new root x_new of
+    /// polynomial with modulo prm^k.
+    fn lift_with_hensel_method(&self, sub_sols: Vec<T>, prm_k: u8) -> Option<Vec<T>> {
+        let mut sols: Vec<T> = vec![];
+
+        for sub_sol in sub_sols.into_iter() {
+            let dx = T::add_mod(
+                T::mult_mod(2.into(), T::mult_mod(self.a, sub_sol, self.modu), self.modu),
+                self.b,
+                self.modu,
+            );
+
+            if T::gcd_mod(self.modu, dx) != T::one() {
+                // singular root, dx doesn't have multiplicative inverse
+                continue;
+            }
+
+            let t = T::multip_inv(dx, self.modu);
+
+            let mut modu = self.modu;
+            let mut lifted_sol = sub_sol;
+
+            for _ in 1..prm_k {
+                modu = modu * self.modu;
+
+                let ax = T::mult_mod(
+                    self.a,
+                    T::mult_mod_unsafe(lifted_sol, lifted_sol, modu),
+                    modu,
+                );
+                let bx = T::mult_mod(self.b, lifted_sol, modu);
+                let cx = T::sub_mod(T::zero(), self.d, modu);
+
+                // poly = a * x_lifted^2 + b * x_lifted + c, where in this case c=-d
+                let poly = T::add_mod_unsafe(T::add_mod_unsafe(ax, bx, modu), cx, modu);
+                lifted_sol = T::sub_mod_unsafe(lifted_sol, T::mult_mod_unsafe(poly, t, modu), modu);
+            }
+
+            sols.push(lifted_sol);
+        }
+
+        Some(sols)
     }
 }
 
