@@ -1,4 +1,4 @@
-//! Utility for command line argument parsing.
+//! Command line argument parsing.
 //!
 //! Library crate doesn't need this but binary crate does.
 //!

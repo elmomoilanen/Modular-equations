@@ -352,3 +352,66 @@ fn hensel_method_with_power_of_five() {
         check_multiple_sols_correctness(lifted_sols, &correct_sols, modulo);
     }
 }
+
+#[test]
+fn combine_solution_for_composite_modu_small_type() {
+    let modu = 77;
+    let all_sols: Vec<(u8, u8)> = vec![(3, 7), (4, 7), (1, 11), (10, 11)];
+
+    let modu_start_indices: Vec<usize> = vec![0, 2];
+    let modu_sol_counts: Vec<usize> = vec![2, 2];
+
+    let combined_sols = QuadEq::combine_solution_for_compo_modu(
+        all_sols,
+        modu,
+        modu_start_indices,
+        modu_sol_counts,
+    );
+
+    let correct_sols: Vec<u8> = vec![10, 32, 45, 67];
+
+    assert_eq!(combined_sols.len(), correct_sols.len());
+    assert_eq!(combined_sols, correct_sols);
+}
+
+#[test]
+fn combine_solution_for_composite_modu_small_type_zero_sol() {
+    let modu = 60;
+    let all_sols: Vec<(u8, u8)> = vec![(0, 3), (0, 4), (2, 5), (3, 5)];
+
+    let modu_start_indices: Vec<usize> = vec![0, 1, 2];
+    let modu_sol_counts: Vec<usize> = vec![1, 1, 2];
+
+    let combined_sols = QuadEq::combine_solution_for_compo_modu(
+        all_sols,
+        modu,
+        modu_start_indices,
+        modu_sol_counts,
+    );
+
+    let correct_sols: Vec<u8> = vec![12, 48];
+
+    assert_eq!(combined_sols.len(), correct_sols.len());
+    assert_eq!(combined_sols, correct_sols);
+}
+
+#[test]
+fn combine_solution_for_composite_modu_mid_type() {
+    let modu = 315;
+    let all_sols: Vec<(u32, u32)> = vec![(3, 5), (4, 5), (1, 7), (3, 7), (2, 9), (4, 9)];
+
+    let modu_start_indices: Vec<usize> = vec![0, 2, 4];
+    let modu_sol_counts: Vec<usize> = vec![2, 2, 2];
+
+    let combined_sols = QuadEq::combine_solution_for_compo_modu(
+        all_sols,
+        modu,
+        modu_start_indices,
+        modu_sol_counts,
+    );
+
+    let correct_sols: Vec<u32> = vec![29, 38, 94, 148, 164, 218, 274, 283];
+
+    assert_eq!(combined_sols.len(), correct_sols.len());
+    assert_eq!(combined_sols, correct_sols);
+}

@@ -83,6 +83,7 @@ mod factor;
 mod lin;
 mod prime;
 mod quad;
+mod utils;
 
 pub trait UInt:
     PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Send + Sync

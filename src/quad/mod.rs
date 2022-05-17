@@ -8,7 +8,9 @@ use crate::{
     arith::{Arith, CoreArith, SignCast},
     factor::Factors,
     lin::LinEq,
-    prime, Int, UInt,
+    prime,
+    utils::make_index_combinations,
+    Int, UInt,
 };
 
 use num::iter;
@@ -202,10 +204,19 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
     }
 
-    /// Solve equation ax^2 + bx = d (mod modu) for composite modu.
+    /// Solve equation ax^2 + bx = d (mod modu) for composite modu, where
+    /// `factor_repr`: \[(p_1,k_1), ..., (p_n,k_n)\] is its prime factor
+    /// representation. Hence, the equation is actually solved in every ring
+    /// of integers modulo p_i^k_i and at the end these solutions are combined
+    /// to a final solution for the original composite modulo.
     fn solve_quad_composite_mod(&self, factor_repr: &[(T, u8)]) -> Option<Vec<T>> {
-        let modu_orig = self.modu;
         let mut x_sols: Vec<(T, T)> = vec![];
+        let mut x_sols_count = 0;
+
+        let uniq_factors = factor_repr.len();
+
+        let mut modu_start_index: Vec<usize> = vec![0];
+        let mut modu_sol_count: Vec<usize> = vec![];
 
         let mut quad = QuadEq { ..*self };
 
@@ -230,21 +241,33 @@ impl<T: 'static + UInt> QuadEq<T> {
             };
 
             match x_sub_sols {
-                None => return None,
-                Some(sub_sols) => {
-                    for x_sol in sub_sols {
-                        x_sols.push((x_sol, total_modulo));
+                Some(sub_sols) if !sub_sols.is_empty() => {
+                    let sub_sol_count = sub_sols.len();
+                    modu_sol_count.push(sub_sol_count);
+
+                    for x_sol in sub_sols.iter() {
+                        x_sols.push((*x_sol, total_modulo));
                     }
+
+                    x_sols_count += sub_sol_count;
+                    modu_start_index.push(x_sols_count);
                 }
+                _ => return None,
             }
         }
 
-        quad.modu = modu_orig;
+        if uniq_factors > 1 {
+            // multiple factors, combine solutions for the original modulo
+            modu_start_index.pop(); // last index is always redundant
 
-        if factor_repr.len() > 1 {
-            // crt(x_sols, quad_modu)
-            None
+            Some(QuadEq::combine_solution_for_compo_modu(
+                x_sols,
+                self.modu,
+                modu_start_index,
+                modu_sol_count,
+            ))
         } else {
+            // only one factor (p_i^k_i), nothing to combine
             Some(x_sols.iter().map(|&x_tuple| x_tuple.0).collect())
         }
     }
@@ -255,7 +278,7 @@ impl<T: 'static + UInt> QuadEq<T> {
     }
 
     /// Lift root x of quadratic polynomial f(x) = 0 (mod prm^k-1) to a new root x_new of
-    /// polynomial with modulo prm^k.
+    /// the same quadratic polynomial but with modulo prm^k.
     fn lift_with_hensel_method(&self, sub_sols: Vec<T>, prm_k: u8) -> Option<Vec<T>> {
         let mut sols: Vec<T> = vec![];
 
@@ -296,6 +319,46 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         Some(sols)
+    }
+
+    fn combine_solution_for_compo_modu(
+        all_sols: Vec<(T, T)>,
+        compo_modu: T,
+        modu_start_indices: Vec<usize>,
+        modu_sol_counts: Vec<usize>,
+    ) -> Vec<T> {
+        let mut sols: Vec<T> = vec![];
+
+        let index_combinations = match make_index_combinations(&modu_sol_counts) {
+            Some(combi) => combi,
+            None => {
+                // should never end up here
+                panic!("Failed to combine a solution.");
+            }
+        };
+
+        for combi in index_combinations {
+            let mut sum = T::zero();
+
+            for (i, c_i) in combi.iter().enumerate() {
+                let idx = *c_i + modu_start_indices[i];
+
+                let modu_div = compo_modu / all_sols[idx].1;
+                let inv = T::multip_inv(modu_div, all_sols[idx].1);
+                let res = T::mult_mod_unsafe(
+                    T::mult_mod(all_sols[idx].0, modu_div, compo_modu),
+                    inv,
+                    compo_modu,
+                );
+
+                sum = T::add_mod_unsafe(sum, res, compo_modu);
+            }
+
+            sols.push(sum);
+        }
+        sols.sort_unstable();
+
+        sols
     }
 }
 
