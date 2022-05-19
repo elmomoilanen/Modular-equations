@@ -294,6 +294,96 @@ fn eq_small_type_odd_prime_mod() {
 }
 
 #[test]
+fn eq_large_type_odd_prime_mod() {
+    // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
+    // modu is odd prime and the equation has two solutions
+
+    let test_cases: [[u128; 7]; 5] = [
+        [90_853, 51_252, 18_000, 6000, 99_991, 267, 63_226],
+        [
+            1,
+            0,
+            0,
+            9_999_999_999_999_999,
+            9_223_372_036_854_775_783,
+            287_990_794_123_520_843,
+            8_935_381_242_731_254_940,
+        ],
+        [
+            1_212_421_490_235,
+            91_595_920_724_124,
+            0,
+            74_825_828_142,
+            9_223_372_036_854_775_783,
+            3_586_932_499_142_287_740,
+            6_079_892_515_866_449_701,
+        ],
+        [
+            99_999_988_888_777_777_755_555_333_333_311_111_111,
+            9_999_999_999_999_999_999_999_999_999_999_999_999,
+            1_112_223_334_445_550_009_991_241_241_241_252_141,
+            0,
+            340_282_366_920_938_463_463_374_607_431_768_211_297,
+            93_206_577_167_428_250_771_283_116_410_888_834_940,
+            227_169_082_945_979_312_544_589_254_078_268_951_586,
+        ],
+        [
+            340_282_366_920_938_463_463_374_607_431_768_211_295,
+            340_282_366_920_938_463_463_374_607_431_768_211_291,
+            340_282_366_920_938_463_463_374_607_431_768_211_287,
+            0,
+            340_282_366_920_938_463_463_374_607_431_768_211_297,
+            29_529_484_007_650_875_106_259_903_148_918_400_628,
+            310_752_882_913_287_588_357_114_704_282_849_810_666,
+        ],
+    ];
+
+    for test in test_cases.iter() {
+        let modu = test[4];
+
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        let corr_sol = vec![test[5], test[6]];
+        check_multiple_sols_correctness(quad_eq.solve(), &corr_sol, modu);
+    }
+}
+
+#[test]
+fn eq_small_signed_type_odd_prime_mod() {
+    // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
+    // modu is odd prime and the equation has two solutions
+
+    let test_cases: [(i8, i8, i8, i8, u8, u8, u8); 5] = [
+        (-126, 125, -125, -125, 11, 0, 3),
+        (-126, -126, -126, -126, 103, 0, 102),
+        (-1, 126, -126, -121, 5, 0, 1),
+        (-3, -1, 1, 0, 103, 10, 24),
+        (-126, -125, 125, 1, 251, 48, 204),
+    ];
+
+    for test in test_cases.iter() {
+        let modu = test.4;
+
+        let quad_eq = QuadEqSigned {
+            a: test.0,
+            b: test.1,
+            c: test.2,
+            d: test.3,
+            modu,
+        };
+
+        let corr_sol = vec![test.5, test.6];
+        check_multiple_sols_correctness(quad_eq.solve(), &corr_sol, modu);
+    }
+}
+
+#[test]
 fn hensel_method_with_power_of_three() {
     let quad_eq = QuadEq::<u8> {
         a: 1,
@@ -414,4 +504,65 @@ fn combine_solution_for_composite_modu_mid_type() {
 
     assert_eq!(combined_sols.len(), correct_sols.len());
     assert_eq!(combined_sols, correct_sols);
+}
+
+#[test]
+fn eq_signed_type_odd_power_of_prime_mod() {
+    // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
+    // modu is odd prime and the equation has two solutions
+
+    let test_cases: [(i64, i64, i64, i64, u64, u64, u64); 5] = [
+        (1, 1, 47, 0, 343, 99, 243),
+        (
+            999_999,
+            1,
+            -111_111,
+            0,
+            4_501_401_006_735_361,
+            1_557_059_636_720_593,
+            2_962_779_126_976_113,
+        ),
+        (
+            999_999_999_999_999_999,
+            -999_999_999_912_421,
+            214_081_248_358_023_524,
+            0,
+            2_862_423_051_509_815_793,
+            2_303_508_973_012_165_250,
+            2_721_119_028_450_610_552,
+        ),
+        (
+            -125_125_121_242_124,
+            -54_224_212_353_523,
+            113_535_124_124_255,
+            0,
+            4_611_686_014_132_420_609,
+            1_523_832_291_260_501_430,
+            2_424_331_690_299_886_142,
+        ),
+        (
+            -1,
+            1,
+            -1,
+            0,
+            4_611_686_014_132_420_609,
+            581_405_252_161_832_858,
+            4_030_280_761_970_587_752,
+        ),
+    ];
+
+    for test in test_cases.iter() {
+        let modu = test.4;
+
+        let quad_eq = QuadEqSigned {
+            a: test.0,
+            b: test.1,
+            c: test.2,
+            d: test.3,
+            modu,
+        };
+
+        let corr_sol = vec![test.5, test.6];
+        check_multiple_sols_correctness(quad_eq.solve(), &corr_sol, modu);
+    }
 }

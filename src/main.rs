@@ -23,10 +23,9 @@ fn main() {
 
     match &equa {
         EquaKind::LinearI64(eq_lin) => print_sol(eq_lin.solve(), eq_lin.modu),
-        // TODO: complete quadratic cases
-        EquaKind::QuadI64(_eq_quad) => (),
+        EquaKind::QuadI64(eq_quad) => print_sol(eq_quad.solve(), eq_quad.modu),
         EquaKind::LinearI128(eq_lin_large) => print_sol(eq_lin_large.solve(), eq_lin_large.modu),
-        EquaKind::QuadI128(_eq_quad_large) => (),
+        EquaKind::QuadI128(eq_quad_large) => print_sol(eq_quad_large.solve(), eq_quad_large.modu),
     }
 }
 

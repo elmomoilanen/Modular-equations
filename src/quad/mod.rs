@@ -2,7 +2,8 @@
 //!
 //! Modular quadratic equations are of the form ax^2 + bx + c = d (mod n) where
 //! every term or element is a residue class \[*\] belonging to the ring of integers
-//! Z/nZ. Modulo term `n` must be a positive integer and strictly larger than one.
+//! modulo n (Z/nZ). The modulo term `n` must be a positive integer and strictly
+//! larger than one.
 //!
 use crate::{
     arith::{Arith, CoreArith, SignCast},
@@ -18,9 +19,12 @@ use num::iter;
 /// Type for quadratic equations with only unsigned terms.
 ///
 /// Quadratic modular equations are of the form ax^2 + bx + c = d (mod n) where
-/// terms `a`, `b`, `c` and `d` must be nonnegative for this type. Also modulo `n`
-/// must be the same unsigned type and strictly larger than one. Solve method
-/// of this type will panic if the modulo `n` doesn't satisfy this requirement.
+/// terms `a`, `b`, `c` and `d` must be nonnegative for this type. Furthermore,
+/// the modulo `n` term must be the same unsigned type and strictly larger than
+/// one as its value. Solve method of this type will panic if the modulo `n`
+/// doesn't satisfy this requirement.
+
+#[derive(Debug)]
 pub struct QuadEq<T: UInt> {
     pub a: T,
     pub b: T,
@@ -33,8 +37,9 @@ pub struct QuadEq<T: UInt> {
 ///
 /// Quadratic modular equations are of the form ax^2 + bx + c = d (mod n) where
 /// terms `a`, `b`, `c` and `d` are signed for this type. Modulo `n` must be
-/// an unsigned type but compatible to the signed type, e.g. u32 if signed type
-/// is i32, and strictly larger than one as its value. Solve method of this type
+/// an unsigned type but compatible to the signed type (same byte count), e.g.
+/// an unsigned type u32 would be accepted if the signed type is i32. The modulo
+/// term must be strictly larger than one as its value. Solve method of this type
 /// will panic if the modulo `n` doesn't satisfy this requirement.
 pub struct QuadEqSigned<S: Int, T: UInt> {
     pub a: S,
@@ -233,12 +238,17 @@ impl<T: 'static + UInt> QuadEq<T> {
 
                 match quad.solve_quad_simple() {
                     Some(x_sols) if *prm_k <= 1 => Some(x_sols),
-                    Some(x_sols) => quad.lift_with_hensel_method(x_sols, *prm_k),
+                    Some(x_sols) => {
+                        quad.d = self.d;
+                        quad.lift_with_hensel_method(x_sols, *prm_k)
+                    }
                     None => None,
                 }
             } else {
                 quad.solve_quad_mod_two()
             };
+
+            quad.d = self.d;
 
             match x_sub_sols {
                 Some(sub_sols) if !sub_sols.is_empty() => {
@@ -268,7 +278,10 @@ impl<T: 'static + UInt> QuadEq<T> {
             ))
         } else {
             // only one factor (p_i^k_i), nothing to combine
-            Some(x_sols.iter().map(|&x_tuple| x_tuple.0).collect())
+            let mut sol: Vec<T> = x_sols.iter().map(|&x_tuple| x_tuple.0).collect();
+            sol.sort();
+
+            Some(sol)
         }
     }
 
@@ -302,11 +315,7 @@ impl<T: 'static + UInt> QuadEq<T> {
             for _ in 1..prm_k {
                 modu = modu * self.modu;
 
-                let ax = T::mult_mod(
-                    self.a,
-                    T::mult_mod_unsafe(lifted_sol, lifted_sol, modu),
-                    modu,
-                );
+                let ax = T::mult_mod(self.a, T::mult_mod(lifted_sol, lifted_sol, modu), modu);
                 let bx = T::mult_mod(self.b, lifted_sol, modu);
                 let cx = T::sub_mod(T::zero(), self.d, modu);
 
