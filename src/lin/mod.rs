@@ -45,7 +45,7 @@ impl<T: UInt> LinEq<T> {
     /// the c parameter and on the contrary, magnitude of N depending on the equation.
     /// If gcd(a, modu) == 1, there will be a unique solution.
     pub fn solve(&self) -> Option<Vec<T>> {
-        if self.modu <= T::one() {
+        if self.modu <= T::one() || self.a == T::zero() {
             return None;
         }
 

@@ -51,8 +51,18 @@ pub struct QuadEqSigned<S: Int, T: UInt> {
 
 impl<T: 'static + UInt> QuadEq<T> {
     pub fn solve(&self) -> Option<Vec<T>> {
-        if self.modu <= T::one() {
+        if self.modu <= T::one() || (self.a == T::zero() && self.b == T::zero()) {
             return None;
+        }
+
+        if self.a == T::zero() {
+            let lin_eq = LinEq {
+                a: self.b,
+                b: self.c,
+                c: self.d,
+                modu: self.modu,
+            };
+            return lin_eq.solve();
         }
 
         let mut quad = QuadEq { ..*self };
@@ -64,15 +74,12 @@ impl<T: 'static + UInt> QuadEq<T> {
 
         match prime::is_odd_prime(quad.modu) {
             true if quad.a == T::one() && quad.b == T::zero() => {
+                // solve x^2 = d (mod modu)
                 quad.solve_quad_residue_odd_prime_mod()
             }
             true => {
-                // modify to (2ax + b)^2 = b^2 + 4ad' (mod modu), d' = d - c
-                let b2 = T::mult_mod(quad.b, quad.b, quad.modu);
-                let ad = T::mult_mod(4.into(), T::mult_mod(quad.a, quad.d, quad.modu), quad.modu);
-
-                quad.d = T::add_mod_unsafe(b2, ad, quad.modu);
-
+                // it might be possible to convert ax^2 + bx = d (mod modu)
+                // to (2ax + b)^2 = b^2 + 4ad which can be solved in two steps
                 quad.solve_quad_simple()
             }
             false => {
@@ -88,23 +95,45 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
     }
 
-    /// Solve equation (2ax + b)^2 = d (mod modu), where modu is an odd prime.
-    /// First, solve z^2 = d (mod modu), and then 2ax + b = z (mod modu) for x.
+    /// Solve equation (2ax + b)^2 = d' (mod modu), where modu is an odd prime
+    /// and d' = b^2 + 4a(d - c). For this to work, a must be greater than zero.
+    /// First solve z^2 = d (mod modu), and then 2ax + b = z (mod modu) for x.
     fn solve_quad_simple(&self) -> Option<Vec<T>> {
-        let z = match self.solve_quad_residue_odd_prime_mod() {
+        if self.a % self.modu == T::zero() {
+            let lin_eq = LinEq {
+                a: self.b,
+                b: self.c,
+                c: self.d,
+                modu: self.modu,
+            };
+            return lin_eq.solve();
+        }
+
+        let b2 = T::mult_mod(self.b, self.b, self.modu);
+        let ad = T::mult_mod(4.into(), T::mult_mod(self.a, self.d, self.modu), self.modu);
+
+        let quad = QuadEq {
+            a: self.a,
+            b: self.b,
+            c: self.c,
+            d: T::add_mod_unsafe(b2, ad, self.modu),
+            modu: self.modu,
+        };
+
+        let z = match quad.solve_quad_residue_odd_prime_mod() {
             Some(z) if !z.is_empty() => z,
             _ => return None,
         };
 
         let mut lin_eq = LinEq {
-            a: T::mult_mod(2.into(), self.a, self.modu),
-            b: self.b,
+            a: T::mult_mod(2.into(), quad.a, quad.modu),
+            b: quad.b,
             c: z[0],
-            modu: self.modu,
+            modu: quad.modu,
         };
 
         let mut x_sols = match lin_eq.solve() {
-            Some(x_sols) => x_sols,
+            Some(sols) => sols,
             _ => return None,
         };
 
@@ -116,11 +145,8 @@ impl<T: 'static + UInt> QuadEq<T> {
         lin_eq.c = z[1];
 
         let mut x_sols_2 = match lin_eq.solve() {
-            Some(x_sols) => x_sols,
-            _ => {
-                // shouldn't go here as the first linear eq had solutions
-                return Some(x_sols);
-            }
+            Some(sols) => sols,
+            _ => return Some(x_sols),
         };
 
         x_sols.append(&mut x_sols_2);
@@ -230,25 +256,14 @@ impl<T: 'static + UInt> QuadEq<T> {
             quad.modu = *prm_factor;
 
             let x_sub_sols = if quad.modu > 2.into() {
-                // modify to (2ax + b)^2 = b^2 + 4ad' (mod modu), d' = d - c and modu is now an odd prime
-                let b2 = T::mult_mod(quad.b, quad.b, quad.modu);
-                let ad = T::mult_mod(4.into(), T::mult_mod(quad.a, quad.d, quad.modu), quad.modu);
-
-                quad.d = T::add_mod_unsafe(b2, ad, quad.modu);
-
                 match quad.solve_quad_simple() {
                     Some(x_sols) if *prm_k <= 1 => Some(x_sols),
-                    Some(x_sols) => {
-                        quad.d = self.d;
-                        quad.lift_with_hensel_method(x_sols, *prm_k)
-                    }
+                    Some(x_sols) => quad.lift_with_hensel_method(x_sols, *prm_k),
                     None => None,
                 }
             } else {
                 quad.solve_quad_mod_two()
             };
-
-            quad.d = self.d;
 
             match x_sub_sols {
                 Some(sub_sols) if !sub_sols.is_empty() => {
