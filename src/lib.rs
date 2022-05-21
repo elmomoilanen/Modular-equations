@@ -73,6 +73,7 @@
 //!
 use std::convert::{From, Into};
 use std::fmt::{Debug, Display};
+use std::hash::Hash;
 use std::marker::{Send, Sync};
 
 use num::{integer::Roots, PrimInt, Signed, Unsigned};
@@ -86,12 +87,12 @@ mod quad;
 mod utils;
 
 pub trait UInt:
-    PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Send + Sync
+    PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Hash + Send + Sync
 {
 }
 
 impl<T> UInt for T where
-    T: PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Send + Sync
+    T: PrimInt + Unsigned + Roots + Display + Debug + From<u8> + Into<u128> + Hash + Send + Sync
 {
 }
 

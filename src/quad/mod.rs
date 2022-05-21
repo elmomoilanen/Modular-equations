@@ -10,11 +10,12 @@ use crate::{
     factor::Factors,
     lin::LinEq,
     prime,
-    utils::make_index_combinations,
+    utils::{largest_common_dividing_power_of_two, make_index_combinations},
     Int, UInt,
 };
 
 use num::iter;
+use std::collections::HashSet;
 
 /// Type for quadratic equations with only unsigned terms.
 ///
@@ -41,6 +42,8 @@ pub struct QuadEq<T: UInt> {
 /// an unsigned type u32 would be accepted if the signed type is i32. The modulo
 /// term must be strictly larger than one as its value. Solve method of this type
 /// will panic if the modulo `n` doesn't satisfy this requirement.
+
+#[derive(Debug)]
 pub struct QuadEqSigned<S: Int, T: UInt> {
     pub a: S,
     pub b: S,
@@ -79,7 +82,7 @@ impl<T: 'static + UInt> QuadEq<T> {
             }
             true => {
                 // it might be possible to convert ax^2 + bx = d (mod modu)
-                // to (2ax + b)^2 = b^2 + 4ad which can be solved in two steps
+                // to (2ax + b)^2 = b^2 + 4ad which can then be solved in two steps
                 quad.solve_quad_simple()
             }
             false => {
@@ -110,13 +113,13 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         let b2 = T::mult_mod(self.b, self.b, self.modu);
-        let ad = T::mult_mod(4.into(), T::mult_mod(self.a, self.d, self.modu), self.modu);
+        let four_ad = T::mult_mod(4.into(), T::mult_mod(self.a, self.d, self.modu), self.modu);
 
         let quad = QuadEq {
             a: self.a,
             b: self.b,
             c: self.c,
-            d: T::add_mod_unsafe(b2, ad, self.modu),
+            d: T::add_mod_unsafe(b2, four_ad, self.modu),
             modu: self.modu,
         };
 
@@ -262,7 +265,7 @@ impl<T: 'static + UInt> QuadEq<T> {
                     None => None,
                 }
             } else {
-                quad.solve_quad_mod_two()
+                quad.solve_quad_mod_power_of_two(*prm_k, total_modulo)
             };
 
             match x_sub_sols {
@@ -300,13 +303,223 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
     }
 
-    ///
-    fn solve_quad_mod_two(&self) -> Option<Vec<T>> {
+    /// Solve equation ax^2 + bx = d (mod 2^m) for some m >= 1.
+    fn solve_quad_mod_power_of_two(&self, prm_k: u8, total_modulo: T) -> Option<Vec<T>> {
+        if self.b == T::zero() {
+            return self.solve_quad_residue_power_of_two_mod(prm_k, total_modulo);
+        }
+
+        let a_is_even = self.a & T::one() == T::zero();
+        let b_is_even = self.b & T::one() == T::zero();
+
+        if self.d & T::one() == T::one() && (a_is_even && b_is_even || !a_is_even && !b_is_even) {
+            return None;
+        }
+
+        let simple_sols = match self.search_possible_solutions_mod_power_of_two() {
+            Some(sols) => sols,
+            None => return None,
+        };
+
+        let t = largest_common_dividing_power_of_two(self.a.into(), self.b.into(), self.d.into());
+        let m_prm_k = prm_k - t; // always >= 0
+
+        let mut m_quad = QuadEq { ..*self };
+        m_quad.a = m_quad.a.unsigned_shr(t.into());
+        m_quad.b = m_quad.b.unsigned_shr(t.into());
+        m_quad.d = m_quad.d.unsigned_shr(t.into());
+
+        let simple_sols = if prm_k > 1 {
+            match m_quad.lift_with_hensel_method(simple_sols, m_prm_k) {
+                Some(sols) if t == 0 => return Some(sols),
+                Some(sols) => sols,
+                _ => return None,
+            }
+        } else {
+            simple_sols
+        };
+
+        self.scale_possible_solutions_mod_power_of_two(simple_sols, prm_k, m_prm_k, t)
+    }
+
+    /// Solve equation ax^2 = d (mod 2^m) for some m >= 1.
+    fn solve_quad_residue_power_of_two_mod(&self, prm_k: u8, total_modulo: T) -> Option<Vec<T>> {
+        match prm_k {
+            1 => self.solve_quad_simple_mod_two(),
+            2 => self.solve_quad_simple_mod_four(total_modulo),
+            _ if T::gcd_mod(self.a, total_modulo) == T::one() => {
+                self.solve_quad_simple_mod_higher_power_of_two(prm_k, total_modulo)
+            }
+            _ if self.d & T::one() == T::zero()
+                && self.a & T::one() == T::zero()
+                && self.a % total_modulo > T::zero() =>
+            {
+                // a and d even, a not divisible by total modulo (2^prm_k)
+                self.solve_quad_simple_even_terms_mod_higher_power_of_two(prm_k, total_modulo)
+            }
+            _ => None,
+        }
+    }
+
+    fn solve_quad_simple_mod_two(&self) -> Option<Vec<T>> {
+        match (self.a & T::one() == T::one(), self.d & T::one() == T::one()) {
+            (true, true) => Some(vec![T::one()]),
+            (true, false) => Some(vec![T::zero()]),
+            (false, true) => {
+                // a even and d odd => no solution
+                None
+            }
+            (false, false) => Some(vec![T::zero(), T::one()]),
+        }
+    }
+
+    fn solve_quad_simple_mod_four(&self, total_modulo: T) -> Option<Vec<T>> {
+        if self.d & T::one() == T::one() && T::gcd_mod(self.a, total_modulo) == T::one() {
+            let d = T::mult_mod(T::multip_inv(self.a, total_modulo), self.d, total_modulo);
+
+            if d % 4.into() == T::one() {
+                Some(vec![T::one(), 3.into()])
+            } else {
+                None
+            }
+        } else if self.d & T::one() == T::zero() {
+            let d_div_by_four = self.d % 4.into() == T::zero();
+            let a_mod_four = self.a % 4.into();
+
+            if d_div_by_four && a_mod_four == T::zero() {
+                Some(vec![T::zero(), T::one(), 2.into(), 3.into()])
+            } else if d_div_by_four {
+                Some(vec![T::zero(), 2.into()])
+            } else if !d_div_by_four && a_mod_four == 2.into() {
+                Some(vec![T::one(), 3.into()])
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    fn solve_quad_simple_mod_higher_power_of_two(
+        &self,
+        prm_k: u8,
+        total_modulo: T,
+    ) -> Option<Vec<T>> {
+        let d = T::mult_mod(T::multip_inv(self.a, total_modulo), self.d, total_modulo);
+
+        if d == T::zero() {
+            return Some(vec![
+                T::zero(),
+                (self.modu).pow((prm_k as f64 / 2f64).ceil() as u32),
+            ]);
+        }
+
+        if d % 8.into() == T::one() {
+            let mut sols: Vec<T> = vec![];
+            let base: Vec<T> = vec![T::one(), 3.into()];
+
+            for b in base.into_iter() {
+                let mut s = b;
+
+                for j in 3..prm_k {
+                    let t = T::pow(2.into(), j.into()); // pow < total_modulo, for every j
+                    let s2 = T::mult_mod(s, s, total_modulo);
+
+                    let r = if s2 >= d { (s2 - d) / t } else { (d - s2) / t };
+
+                    s = T::add_mod(s, (r & T::one()) * (t.unsigned_shr(1)), total_modulo);
+                }
+                sols.push(s);
+                sols.push(total_modulo - s);
+            }
+
+            return Some(sols);
+        }
+
         None
     }
 
-    /// Lift root x of quadratic polynomial f(x) = 0 (mod prm^k-1) to a new root x_new of
-    /// the same quadratic polynomial but with modulo prm^k.
+    fn solve_quad_simple_even_terms_mod_higher_power_of_two(
+        &self,
+        prm_k: u8,
+        total_modulo: T,
+    ) -> Option<Vec<T>> {
+        let t =
+            largest_common_dividing_power_of_two((self.a % total_modulo).into(), 2, self.d.into());
+        let m_prm_k = prm_k - t; // always >= 0
+
+        let sub_sols = if self.d > T::zero() {
+            let mut m_quad = QuadEq { ..*self };
+
+            m_quad.a = m_quad.a.unsigned_shr(t.into());
+            m_quad.d = m_quad.d.unsigned_shr(t.into());
+
+            let m_total_modulo = self.modu.pow(m_prm_k.into());
+
+            m_quad.solve_quad_residue_power_of_two_mod(m_prm_k, m_total_modulo)
+        } else {
+            Some(vec![T::zero()])
+        };
+
+        match sub_sols {
+            Some(sols) => self.scale_possible_solutions_mod_power_of_two(sols, prm_k, m_prm_k, t),
+            _ => None,
+        }
+    }
+
+    fn search_possible_solutions_mod_power_of_two(&self) -> Option<Vec<T>> {
+        let mut sols: Vec<T> = vec![];
+
+        let sols_cand: Vec<T> = vec![T::zero(), T::one()];
+
+        for s in sols_cand.into_iter() {
+            let poly_lhs = T::add_mod(T::mult_mod(self.a, s * s, self.modu), self.b * s, self.modu);
+
+            if T::sub_mod(poly_lhs, self.d, self.modu) == T::zero() {
+                sols.push(s);
+            }
+        }
+
+        if sols.is_empty() {
+            None
+        } else {
+            Some(sols)
+        }
+    }
+
+    fn scale_possible_solutions_mod_power_of_two(
+        &self,
+        sub_sols: Vec<T>,
+        prm_k: u8,
+        m_prm_k: u8,
+        t: u8,
+    ) -> Option<Vec<T>> {
+        let modulo = self.modu.pow(prm_k.into());
+        let modulo_t = self.modu.pow(t.into());
+        let multiplier = self.modu.pow(m_prm_k.into());
+
+        let mut sols = HashSet::new();
+
+        for s in sub_sols.iter() {
+            let mut r = T::zero();
+
+            while r < modulo_t {
+                sols.insert(T::add_mod(*s, T::mult_mod(r, multiplier, modulo), modulo));
+                r = r + T::one();
+            }
+        }
+
+        if sols.is_empty() {
+            None
+        } else {
+            Some(Vec::from_iter(sub_sols))
+        }
+    }
+
+    /// Lift a root x of the quadratic polynomial f(x) = 0 (mod prm^k-1) to
+    /// a new root x_new of the same quadratic polynomial but with a larger
+    /// modulo prm^k. Lifting fails if derivative of the polynomial evaluated
+    /// at the root x doesn't got the multiplicative inverse.
     fn lift_with_hensel_method(&self, sub_sols: Vec<T>, prm_k: u8) -> Option<Vec<T>> {
         let mut sols: Vec<T> = vec![];
 
@@ -342,7 +555,11 @@ impl<T: 'static + UInt> QuadEq<T> {
             sols.push(lifted_sol);
         }
 
-        Some(sols)
+        if sols.is_empty() {
+            None
+        } else {
+            Some(sols)
+        }
     }
 
     fn combine_solution_for_compo_modu(
@@ -356,8 +573,10 @@ impl<T: 'static + UInt> QuadEq<T> {
         let index_combinations = match make_index_combinations(&modu_sol_counts) {
             Some(combi) => combi,
             None => {
-                // should never end up here
-                panic!("Failed to combine a solution.");
+                // should never end up here if program logic ok
+                panic!(
+                    "Failed to combine a solution for a quadratic equation with composite modulo."
+                );
             }
         };
 

@@ -442,15 +442,17 @@ fn sign_cast_success_small_type() {
     let modu = 5;
     let i8_min_valid = i8::MIN + 1;
 
-    let test_cases: [(i8, u8); 8] = [
+    let test_cases: [(i8, u8); 10] = [
+        (0, 0),
         (-1, 4),
         (-2, 3),
         (-5, 0),
         (-11, 4),
         (i8_min_valid, 3),
         (1, 1),
-        (6, 1),
-        (i8::MAX, 2),
+        (5, 5),
+        (6, 6),
+        (i8::MAX, i8::MAX as u8),
     ];
 
     for test in test_cases.iter() {
@@ -468,7 +470,8 @@ fn sign_cast_success_small_type_max_modu() {
     let modu = u8::MAX;
     let i8_min_valid = i8::MIN + 1;
 
-    let test_cases: [(i8, u8); 4] = [
+    let test_cases: [(i8, u8); 5] = [
+        (0, 0),
         (-1, modu - 1),
         (-100, modu - 100),
         (i8_min_valid, i8::MAX as u8 + 1),
@@ -498,13 +501,15 @@ fn sign_cast_success_large_type() {
     let modu = 7;
     let i128_min_valid = i128::MIN + 1;
 
-    let test_cases: [(i128, u128); 6] = [
+    let test_cases: [(i128, u128); 8] = [
+        (0, 0),
         (-3, 4),
         (-11, 3),
         (i128_min_valid, 6),
         (1, 1),
-        (8, 1),
-        (i128::MAX, 1),
+        (7, 7), // == modu
+        (8, 8),
+        (i128::MAX, i128::MAX as u128),
     ];
 
     for test in test_cases.iter() {

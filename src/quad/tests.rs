@@ -1,8 +1,22 @@
+//! Tests for quadratic equation solver.
+//!
+//! Notice that the correct solutions (given as own arrays or just within test cases)
+//! might contain zero padding for convenience (to fix array lengths) but this
+//! doesn't matter when checking the test results.
+//!
+//! Quadratic solver returns solutions in order from smallest to largest and hence
+//! the correct results of test cases must comply with this behaviour.
+//!
 use std::collections::{HashMap, HashSet};
 
 use crate::quad::{QuadEq, QuadEqSigned};
 use crate::UInt;
 
+/// Check whether solutions arrays match. Arg `sols_cand` should be the array returned
+/// by the quadratic solver. Second arg `sols_corr` should contain the correct solutions
+/// with possible zero padding. Duplicate roots (e.g. 0 and 0) have no meaning and
+/// the quadratic solver shouldn't even return such, thus possible zero padding in the
+/// second array doesn't matter.
 fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr: &[T], modu: T) {
     // right_arr can be larger as it might contain zero padding
     match sols_cand {
@@ -17,7 +31,7 @@ fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr
                 );
             }
         }
-        None => assert!(false, "x_corr: {:?}, x: None", sols_corr),
+        None => assert!(false, "x_corr: {:?}, x: None, mod: {}", sols_corr, modu),
     }
 }
 
@@ -663,7 +677,7 @@ fn eq_small_signed_type_composite_mod() {
 fn eq_large_type_composite_mod() {
     // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
 
-    let test_cases: [[u128; 5]; 3] = [
+    let test_cases: [[u128; 5]; 5] = [
         [
             1,
             3_124_213,
@@ -671,8 +685,8 @@ fn eq_large_type_composite_mod() {
             0,
             9_223_372_036_854_775_803,
         ],
-        //[2, 3, 5, 0, 5_000_000_000_000_000_000],
-        //[1, 2, 1, 0, 614_889_782_588_491_410],
+        [2, 3, 5, 0, 5_000_000_000_000_000_000],
+        [1, 2, 1, 0, 614_889_782_588_491_410],
         [
             99,
             1,
@@ -689,7 +703,7 @@ fn eq_large_type_composite_mod() {
         ],
     ];
 
-    let correct_sols: [[u128; 16]; 3] = [
+    let correct_sols: [[u128; 16]; 5] = [
         [
             566_238_308_012_032_964,
             1_255_535_490_499_711_868,
@@ -708,42 +722,42 @@ fn eq_large_type_composite_mod() {
             7_967_836_546_351_939_722,
             8_657_133_728_839_618_626,
         ],
-        // [
-        //     966_704_601_316_436_515,
-        //     2_719_160_800_905_243_171,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        // ],
-        // [
-        //     614_889_782_588_491_409,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        //     0,
-        // ],
+        [
+            966_704_601_316_436_515,
+            2_719_160_800_905_243_171,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+        [
+            614_889_782_588_491_409,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
         [
             8_260_234_846_403_945_420_740_348_997_530_770_679,
             13_531_585_419_037_972_340_449_499_599_614_789_529,
@@ -804,14 +818,14 @@ fn eq_large_signed_type_composite_mod() {
     // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
     // modu is odd prime and the equation has two solutions
 
-    let test_cases: [(i128, i128, i128, i128, u128); 4] = [
-        // (
-        //     -999_999_999_999_991_320,
-        //     -911_191_191_232_131_242,
-        //     -982_481_241_441_241_120,
-        //     0,
-        //     9_223_372_036_854_775_798,
-        // ),
+    let test_cases: [(i128, i128, i128, i128, u128); 5] = [
+        (
+            -999_999_999_999_991_320,
+            -911_191_191_232_131_242,
+            -982_481_241_441_241_120,
+            0,
+            9_223_372_036_854_775_798,
+        ),
         (
             10_000_000_000_000_000_000_000_000_000_323,
             -1_111_325_235_235_325_235_125_325_235_363,
@@ -842,17 +856,17 @@ fn eq_large_signed_type_composite_mod() {
         ),
     ];
 
-    let correct_sols: [[u128; 8]; 4] = [
-        // [
-        //     1_732_184_316_592_242_493,
-        //     2_942_415_274_567_158_820,
-        //     3_204_775_211_312_642_198,
-        //     4_415_006_169_287_558_525,
-        //     6_343_870_335_019_630_392,
-        //     7_554_101_292_994_546_719,
-        //     7_816_461_229_740_030_097,
-        //     9_026_692_187_714_946_424,
-        // ],
+    let correct_sols: [[u128; 8]; 5] = [
+        [
+            1_732_184_316_592_242_493,
+            2_942_415_274_567_158_820,
+            3_204_775_211_312_642_198,
+            4_415_006_169_287_558_525,
+            6_343_870_335_019_630_392,
+            7_554_101_292_994_546_719,
+            7_816_461_229_740_030_097,
+            9_026_692_187_714_946_424,
+        ],
         [
             6_589_677_581_610_708_044_841_679_428_405_462_385,
             21_051_736_208_735_753_826_549_962_876_354_104_906,
@@ -938,5 +952,67 @@ fn eq_large_signed_type_composite_mod_count_of_solutions() {
             assert!(sol_set.contains(&18_446_744_073_709_551_616));
             assert!(sol_set.contains(&340_282_366_920_938_463_463_374_607_431_768_211_454));
         }
+    }
+}
+
+#[test]
+fn eq_small_type_mod_two_or_four() {
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
+    // modulo is some power of two
+
+    let test_cases: [[u8; 5]; 17] = [
+        [2, 0, 0, 0, 2],
+        [2, 0, 2, 2, 2],
+        [1, 0, 3, 0, 2],
+        [1, 0, 0, 1, 2],
+        [1, 0, 0, 0, 2],
+        [1, 0, 2, 0, 2],
+        [1, 0, 1, 3, 2],
+        [1, 0, 1, 4, 2],
+        [7, 0, 1, 0, 4],
+        [7, 0, 1, 1, 4],
+        [1, 0, 1, 1, 4],
+        [2, 0, 2, 2, 4],
+        [12, 0, 12, 12, 4],
+        [10, 0, 12, 10, 4],
+        [2, 0, 1, 3, 4],
+        [2, 0, 1, 1, 4],
+        [4, 0, 0, 0, 4],
+    ];
+
+    let correct_sols: [[u8; 4]; 17] = [
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 3, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 1, 2, 3],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [0, 2, 0, 0],
+        [0, 1, 2, 3],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let modu = test[4];
+
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
     }
 }

@@ -1,8 +1,10 @@
 //! Implements basic modular arithmetic operations.
 //!
-//! Use functions under `Arith` trait unless it's guaranteed that the operands
-//! are less than the modulus `modu`, or in other words the operands are the
-//! smallest nonnegative representatives of their residue class.
+//! It's recommended to use functions of `Arith` trait unless it is
+//! guaranteed that the operands for the functions are less than the
+//! modulus `modu`, or in other words the operands are the smallest
+//! nonnegative representatives of their residue class. Violating this
+//! constraint causes two's complement wrapping.
 //!
 use std::cmp::{self, Ordering};
 use std::convert::{From, TryFrom};
@@ -11,7 +13,7 @@ use std::mem;
 use num::{PrimInt, Signed, Unsigned};
 
 pub trait CoreArith<T: PrimInt + Unsigned> {
-    /// Unsafe modular addition.
+    /// Unsafe modular addition, `x` + `y`.
     ///
     /// Two's complement wrapping occurs if the arguments
     /// `x` and `y` are not smaller than `modu`.
@@ -35,7 +37,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         }
     }
 
-    /// Unsafe modular multiplication.
+    /// Unsafe modular multiplication, `x` * `y`.
     ///
     /// Two's complement wrapping occurs if the argument
     /// `x` is not smaller than `modu`.
@@ -58,7 +60,7 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
         res
     }
 
-    /// Unsafe modular exponentation.
+    /// Unsafe modular exponentation, `base` ^ `ex`.
     ///
     /// Uses directly unsafe modular multiplication.
     fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
@@ -107,7 +109,7 @@ pub trait Arith<T>: CoreArith<T>
 where
     T: PrimInt + Unsigned + From<u8>,
 {
-    /// Modular addition.
+    /// Modular addition, `x` + `y`.
     fn add_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::add_mod_unsafe(x, y, modu)
@@ -116,7 +118,7 @@ where
         }
     }
 
-    /// Modular subtraction.
+    /// Modular subtraction, `x` - `y`.
     fn sub_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::sub_mod_unsafe(x, y, modu)
@@ -125,7 +127,7 @@ where
         }
     }
 
-    /// Modular multiplication.
+    /// Modular multiplication, `x` * `y`.
     fn mult_mod(x: T, y: T, modu: T) -> T {
         if x < modu && y < modu {
             Self::mult_mod_unsafe(x, y, modu)
@@ -134,7 +136,7 @@ where
         }
     }
 
-    /// Modular exponentiation.
+    /// Modular exponentiation, `base` ^ `ex`.
     fn exp_mod(base: T, ex: T, modu: T) -> T {
         if base < modu {
             Self::exp_mod_unsafe(base, ex, modu)
@@ -197,7 +199,7 @@ where
         inv
     }
 
-    /// Compute Jacobi symbol `(x|n)`.
+    /// Compute value of the Jacobi symbol `(x|n)`.
     ///
     /// Return value will be one of -1, 0 or 1.
     fn jacobi_symbol(mut x: T, mut n: T) -> i8 {
@@ -259,13 +261,15 @@ where
     ///
     /// This can be done since the `x` can always be given
     /// as the smallest nonnegative representative of its
-    /// residue class.
+    /// residue class. However, notice that if after the sign
+    /// cast `x` equals to or is larger than `modu`, it is
+    /// returned as `x` without taking modulo with `modu`.
     ///
     /// Cast fails if abs(`x`) cannot be computed.
     fn cast_to_unsigned(x: S, modu: T) -> Option<T> {
-        if x > S::zero() {
+        if x >= S::zero() {
             return match T::try_from(x) {
-                Ok(x) => Some(x % modu),
+                Ok(x) => Some(x),
                 Err(_) => None,
             };
         }
