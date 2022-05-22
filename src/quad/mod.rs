@@ -512,30 +512,37 @@ impl<T: 'static + UInt> QuadEq<T> {
         if sols.is_empty() {
             None
         } else {
-            Some(Vec::from_iter(sub_sols))
+            Some(Vec::from_iter(sols))
         }
     }
 
     /// Lift a root x of the quadratic polynomial f(x) = 0 (mod prm^k-1) to
     /// a new root x_new of the same quadratic polynomial but with a larger
-    /// modulo prm^k. Lifting fails if derivative of the polynomial evaluated
-    /// at the root x doesn't got the multiplicative inverse.
+    /// modulo prm^k. Lifting fails to produce a unique new root if derivative
+    /// of the polynomial evaluated at the root x doesn't got the multiplicative
+    /// inverse. In this case, lifting method for singular roots is tried.
+    ///
+    /// Notice that `self.modu` is expected to be the prime factor prm and arg
+    /// `prm_k` determines the final prime power prm^k of the lifting.
     fn lift_with_hensel_method(&self, sub_sols: Vec<T>, prm_k: u8) -> Option<Vec<T>> {
         let mut sols: Vec<T> = vec![];
 
         for sub_sol in sub_sols.into_iter() {
-            let dx = T::add_mod(
+            let poly_d = T::add_mod(
                 T::mult_mod(2.into(), T::mult_mod(self.a, sub_sol, self.modu), self.modu),
                 self.b,
                 self.modu,
             );
 
-            if T::gcd_mod(self.modu, dx) != T::one() {
-                // singular root, dx doesn't have multiplicative inverse
+            if T::gcd_mod(self.modu, poly_d) != T::one() {
+                // singular root, poly_d doesn't have multiplicative inverse
+                if let Some(mut lifted_sols) = self.lift_singular_root(sub_sol, prm_k) {
+                    sols.append(&mut lifted_sols);
+                }
                 continue;
             }
 
-            let t = T::multip_inv(dx, self.modu);
+            let t = T::multip_inv(poly_d, self.modu);
 
             let mut modu = self.modu;
             let mut lifted_sol = sub_sol;
@@ -560,6 +567,43 @@ impl<T: 'static + UInt> QuadEq<T> {
         } else {
             Some(sols)
         }
+    }
+
+    fn lift_singular_root(&self, sub_sol: T, prm_k: u8) -> Option<Vec<T>> {
+        let mut modu = self.modu;
+
+        let mut sols = vec![sub_sol];
+
+        for _ in 1..prm_k {
+            modu = modu * self.modu;
+
+            let mut lifted_sols = vec![];
+
+            for sol in sols.iter() {
+                let ax = T::mult_mod(self.a, T::mult_mod(*sol, *sol, modu), modu);
+                let bx = T::mult_mod(self.b, *sol, modu);
+                let cx = T::sub_mod(T::zero(), self.d, modu);
+
+                let poly = T::add_mod_unsafe(T::add_mod_unsafe(ax, bx, modu), cx, modu);
+
+                if poly % modu == T::zero() {
+                    // every lifting of root `sol`, `sol + t * modu_prev`, is a root of modulo `modu`
+                    let modu_prev = modu / self.modu;
+
+                    for new_sol in iter::range_step(*sol, modu, modu_prev) {
+                        lifted_sols.push(new_sol);
+                    }
+                }
+            }
+
+            sols = lifted_sols;
+
+            if sols.is_empty() {
+                return None;
+            }
+        }
+
+        Some(sols)
     }
 
     fn combine_solution_for_compo_modu(

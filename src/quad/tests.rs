@@ -21,7 +21,12 @@ fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr
     // right_arr can be larger as it might contain zero padding
     match sols_cand {
         Some(sols) => {
-            assert!(sols.len() <= sols_corr.len(), "mod: {}", modu);
+            assert!(
+                sols.len() <= sols_corr.len(),
+                "mod: {}, correct sols: {:?}",
+                modu,
+                sols_corr
+            );
 
             for (elem_l, elem_r) in sols.iter().zip(sols_corr.iter()) {
                 assert_eq!(
@@ -313,6 +318,67 @@ fn eq_small_type_odd_prime_mod() {
         };
 
         check_multiple_sols_correctness(quad_eq.solve(), &corr_sol, modu);
+    }
+}
+
+#[test]
+fn eq_odd_prime_power_multiple_solutions() {
+    let mut quad_eq = QuadEq::<u128> {
+        a: 7,
+        b: 7,
+        c: 7,
+        d: 0,
+        modu: 7,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) => assert_eq!(vec![0, 1, 2, 3, 4, 5, 6], sols),
+        None => assert!(false, "equation {:?} returned None", quad_eq),
+    }
+
+    quad_eq.modu = 49; // 7^2
+
+    match quad_eq.solve() {
+        Some(sols) => assert_eq!(
+            vec![2, 4, 9, 11, 16, 18, 23, 25, 30, 32, 37, 39, 44, 46],
+            sols
+        ),
+        None => assert!(false, "equation {:?} returned None", quad_eq),
+    }
+
+    quad_eq.modu = 343; // 7^3
+
+    match quad_eq.solve() {
+        Some(sols) => assert_eq!(
+            vec![18, 30, 67, 79, 116, 128, 165, 177, 214, 226, 263, 275, 312, 324],
+            sols
+        ),
+        None => assert!(false, "equation {:?} returned None", quad_eq),
+    }
+
+    quad_eq.modu = 107_006_904_423_598_033_356_356_300_384_937_784_807; // 7^45
+
+    match quad_eq.solve() {
+        Some(sols) => assert_eq!(
+            vec![
+                4_326_965_379_217_022_586_828_778_211_151_750_265,
+                10_959_735_252_725_553_606_936_407_558_125_076_135,
+                19_613_666_011_159_598_780_593_963_980_428_576_666,
+                26_246_435_884_668_129_800_701_593_327_401_902_536,
+                34_900_366_643_102_174_974_359_149_749_705_403_067,
+                41_533_136_516_610_705_994_466_779_096_678_728_937,
+                50_187_067_275_044_751_168_124_335_518_982_229_468,
+                56_819_837_148_553_282_188_231_964_865_955_555_338,
+                65_473_767_906_987_327_361_889_521_288_259_055_869,
+                72_106_537_780_495_858_381_997_150_635_232_381_739,
+                80_760_468_538_929_903_555_654_707_057_535_882_270,
+                87_393_238_412_438_434_575_762_336_404_509_208_140,
+                96_047_169_170_872_479_749_419_892_826_812_708_671,
+                102_679_939_044_381_010_769_527_522_173_786_034_541,
+            ],
+            sols
+        ),
+        None => assert!(false, "equation {:?} returned None", quad_eq),
     }
 }
 
@@ -960,7 +1026,7 @@ fn eq_small_type_mod_two_or_four() {
     // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
     // modulo is some power of two
 
-    let test_cases: [[u8; 5]; 17] = [
+    let test_cases: [[u8; 5]; 20] = [
         [2, 0, 0, 0, 2],
         [2, 0, 2, 2, 2],
         [1, 0, 3, 0, 2],
@@ -978,9 +1044,12 @@ fn eq_small_type_mod_two_or_four() {
         [2, 0, 1, 3, 4],
         [2, 0, 1, 1, 4],
         [4, 0, 0, 0, 4],
+        [1, 0, 0, 17, 4],
+        [1, 0, 31, 0, 4],
+        [8, 0, 12, 0, 4],
     ];
 
-    let correct_sols: [[u8; 4]; 17] = [
+    let correct_sols: [[u8; 4]; 20] = [
         [0, 1, 0, 0],
         [0, 1, 0, 0],
         [1, 0, 0, 0],
@@ -998,6 +1067,66 @@ fn eq_small_type_mod_two_or_four() {
         [1, 3, 0, 0],
         [0, 2, 0, 0],
         [0, 1, 2, 3],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [0, 1, 2, 3],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let modu = test[4];
+
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_mod_higher_power_of_two() {
+    let test_cases: [[u128; 5]; 4] = [
+        [1, 0, 15, 0, 4_294_967_296],
+        [1, 0, 25_151_551, 0, 4_611_686_018_427_387_904],
+        // [7, 0, 1, 0, 4096],
+        // [7, 0, 4, 0, 8],
+        // [7, 0, 4, 0, 64],
+        [4, 4, 24, 0, 32],
+        [1, 0, 0, 1, 72],
+    ];
+
+    let correct_sols: [[u128; 8]; 4] = [
+        [
+            34_716_455,
+            2_112_767_193,
+            2_182_200_103,
+            4_260_250_841,
+            0,
+            0,
+            0,
+            0,
+        ],
+        [
+            949_829_031_310_219_745,
+            1_356_013_977_903_474_207,
+            3_255_672_040_523_913_697,
+            3_661_856_987_117_168_159,
+            0,
+            0,
+            0,
+            0,
+        ],
+        // [611, 1437, 2659, 3485, 0, 0, 0, 0],
+        // [2, 6, 0, 0, 0, 0, 0, 0],
+        // [6, 10, 22, 26, 38, 42, 54, 58],
+        [1, 6, 9, 14, 17, 22, 25, 30],
+        [1, 17, 19, 35, 37, 53, 55, 71],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());
