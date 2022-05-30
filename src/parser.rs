@@ -161,6 +161,9 @@ fn get_proper_eq_type(coefs: &[i128], modu: u128, eq_type: EqType) -> EquaKind {
 }
 
 fn show_help() {
-    // TODO: help instruction
-    println!("Solve modular equations\n\nUSAGE:\n  ./modular_arithmetic ...\n");
+    println!(
+        "Solve linear or quadratic modular equation ax^2 + bx + c = d (mod n)\n\n\
+        USAGE (linear):\n  ./target/release/modular_equations <b;integer> <c;integer> <d;integer> <n;positive integer>\n\n\
+        USAGE (quadratic):\n  ./target/release/modular_equations <a;integer> <b;integer> <c;integer> <d;integer> <n;positive integer>\n"
+    );
 }

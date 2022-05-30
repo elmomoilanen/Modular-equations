@@ -1,11 +1,53 @@
 //! Tests for quadratic equation solver.
 //!
+//! In its most general form, quadratic modular equation is given as
+//! ax^2 + bx + c = d (mod m), where m > 1. If c != 0, previous equation
+//! can be quickly modified to ax^2 + bx = d' (mod m), where d'= d - c.
+//!
 //! Notice that the correct solutions (given as own arrays or just within test cases)
 //! might contain zero padding for convenience (to fix array lengths) but this
 //! doesn't matter when checking the test results.
 //!
 //! Quadratic solver returns solutions in order from smallest to largest and hence
 //! the correct results of test cases must comply with this behaviour.
+//!
+//! Testing summary (if c != 0, define d = d - c):
+//!
+//! 1) x^2 = d (mod odd_prime), test function names contain "quad_residue"
+//! -> eq_small_type_quad_residue_odd_prime_mod
+//! -> eq_small_signed_type_quad_residue_odd_prime_mod
+//! -> eq_small_type_quad_residue_and_nonresidue_odd_prime_mod
+//! -> eq_mid_type_quad_residue_odd_prime_mod
+//! -> eq_large_type_quad_residue_odd_prime_mod
+//!
+//! 2) ax^2 + bx = d (mod odd_prime)
+//! -> eq_small_type_odd_prime_mod
+//! -> eq_large_type_odd_prime_mod
+//! -> eq_small_signed_type_odd_prime_mod
+//!
+//! 3) ax^2 + bx = d (mod odd_prime^k), modu is some power of an odd prime
+//! -> eq_small_type_b_zero_odd_prime_power_mod
+//! -> eq_small_type_b_zero_c_nonzero_odd_prime_power_mod
+//! -> eq_odd_prime_power_multiple_solutions
+//! -> eq_mid_signed_type_odd_power_of_prime_mod
+//!
+//! 4) ax^2 + bx = d (mod composite), modu is a composite, e.g. 15 = 3 * 5
+//! -> eq_small_type_composite_mod
+//! -> eq_small_signed_type_composite_mod
+//! -> eq_large_type_composite_mod
+//! -> eq_large_signed_type_composite_mod
+//! -> eq_large_signed_type_composite_mod_count_of_solutions
+//!
+//! 5) ax^2 + bx = d (mod 2^k)
+//! -> eq_small_type_mod_two
+//! -> eq_small_type_b_zero_mod_two_no_solution
+//! -> eq_small_type_b_zero_mod_four_no_solution
+//! -> eq_small_type_b_zero_mod_four
+//! -> eq_small_type_mod_four
+//! -> eq_small_type_b_zero_mod_eight
+//! -> eq_mid_type_mod_eight
+//! -> eq_mid_type_general_mod_power_of_two
+//! -> eq_mid_type_general_mod_power_of_two_no_solution
 //!
 use std::collections::{HashMap, HashSet};
 
@@ -44,6 +86,7 @@ fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr
 fn eq_small_type_quad_residue_odd_prime_mod() {
     // [d, modu, res_1, res_2]: x^2 = d (mod modu), modu odd prime
     // quadratic residue d has two roots res_1 and res_2
+
     let test_cases: [[u8; 4]; 8] = [
         [0, 3, 0, 0],
         [1, 3, 1, 2],
@@ -163,6 +206,7 @@ fn eq_small_type_quad_residue_and_nonresidue_odd_prime_mod() {
 fn eq_mid_type_quad_residue_odd_prime_mod() {
     // [d, modu, res_1, res_2]: x^2 = d (mod modu), modu odd prime
     // quadratic residue d has two roots res_1 and res_2
+
     let test_cases: [[u64; 4]; 8] = [
         [999, 14_867, 3168, 11_699],
         [899, 50_261, 14_696, 35_565],
@@ -211,6 +255,7 @@ fn eq_large_type_quad_residue_odd_prime_mod() {
 
     // [d, modu, res_1, res_2]: x^2 = d (mod modu), modu odd prime
     // quadratic residue d has two roots res_1 and res_2
+
     let test_cases: [[u128; 4]; 8] = [
         [
             1,
@@ -284,16 +329,26 @@ fn eq_small_type_odd_prime_mod() {
     // [a, b, c, d, modu, res_1, res_2]: ax^2 + bx + c = d (mod modu)
     // modu is odd prime and the equation has two solutions
 
-    let test_cases: [[u8; 7]; 12] = [
+    let test_cases: [[u8; 7]; 15] = [
+        // modu 3
         [9, 5, 1, 0, 3, 1, 1],
+        [1, 3, 0, 1, 3, 1, 2],
+        // modu 5
+        [1, 0, 1, 0, 5, 2, 3],
+        [1, 1, 3, 0, 5, 1, 3],
+        // modu 7
+        [1, 1, 0, 0, 7, 0, 6],
+        [6, 6, 6, 0, 7, 2, 4],
+        // modu 11
         [165, 7, 2, 0, 11, 6, 6],
+        [1, 1, 5, 0, 11, 2, 8],
+        // modu 19
         [3, 6, 1, 0, 19, 7, 10],
         [3, 6, 0, 18, 19, 7, 10],
-        [1, 0, 1, 0, 5, 2, 3],
-        [1, 3, 0, 1, 3, 1, 2],
-        [1, 1, 0, 0, 7, 0, 6],
-        [1, 1, 5, 0, 11, 2, 8],
+        // modu 23
         [2, 8, 2, 0, 23, 5, 14],
+        [21, 22, 1, 0, 23, 12, 22],
+        // modu 251, largest odd prime under type u8
         [11, 7, 99, 145, 251, 108, 188],
         [255, 254, 99, 145, 251, 71, 242],
         [255, 254, 255, 251, 251, 92, 221],
@@ -322,21 +377,100 @@ fn eq_small_type_odd_prime_mod() {
 }
 
 #[test]
+fn eq_small_type_b_zero_odd_prime_power_mod() {
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
+    // modu odd prime power, e.g. 3^4
+
+    let test_cases: [[u16; 5]; 10] = [
+        [2, 0, 0, 0, 9],
+        [2, 0, 0, 0, 81],
+        [3, 0, 0, 0, 27],
+        [5, 0, 0, 0, 49],
+        [7, 0, 0, 0, 49],
+        [2, 0, 0, 0, 49],
+        [2, 0, 0, 0, 343],
+        [5, 0, 0, 0, 343],
+        [7, 0, 0, 0, 121],
+        [7, 0, 0, 0, 121],
+    ];
+
+    let correct_sols: [[u16; 11]; 10] = [
+        [0, 3, 6, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 9, 18, 27, 36, 45, 54, 63, 72, 0, 0],
+        [0, 3, 6, 9, 12, 15, 18, 21, 24, 0, 0],
+        [0, 7, 14, 21, 28, 35, 42, 0, 0, 0, 0],
+        [0, 7, 14, 21, 28, 35, 42, 0, 0, 0, 0],
+        [0, 7, 14, 21, 28, 35, 42, 0, 0, 0, 0],
+        [0, 49, 98, 147, 196, 245, 294, 0, 0, 0, 0],
+        [0, 49, 98, 147, 196, 245, 294, 0, 0, 0, 0],
+        [0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110],
+        [0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let modu = test[4];
+
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_small_type_b_zero_c_nonzero_odd_prime_power_mod() {
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
+
+    let test_cases: [[u16; 5]; 5] = [
+        [3, 0, 6, 0, 27],
+        [3, 0, 15, 0, 27],
+        [3, 0, 24, 0, 27],
+        // test that following gives same answers as above
+        [3, 0, 0, 21, 27],
+        [3, 0, 0, 3, 27],
+    ];
+
+    let correct_sols: [[u16; 6]; 5] = [
+        [4, 5, 13, 14, 22, 23],
+        [2, 7, 11, 16, 20, 25],
+        [1, 8, 10, 17, 19, 26],
+        [4, 5, 13, 14, 22, 23],
+        [1, 8, 10, 17, 19, 26],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let modu = test[4];
+
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
 fn eq_odd_prime_power_multiple_solutions() {
     let mut quad_eq = QuadEq::<u128> {
         a: 7,
         b: 7,
         c: 7,
         d: 0,
-        modu: 7,
+        modu: 49,
     };
-
-    match quad_eq.solve() {
-        Some(sols) => assert_eq!(vec![0, 1, 2, 3, 4, 5, 6], sols),
-        None => assert!(false, "equation {:?} returned None", quad_eq),
-    }
-
-    quad_eq.modu = 49; // 7^2
 
     match quad_eq.solve() {
         Some(sols) => assert_eq!(
@@ -529,6 +663,59 @@ fn hensel_method_with_power_of_five() {
         let lifted_sols = quad_eq.lift_with_hensel_method(quad_sols.clone(), test.2);
 
         check_multiple_sols_correctness(lifted_sols, &correct_sols, modulo);
+    }
+}
+
+#[test]
+fn hensel_method_with_power_of_two() {
+    let quad_eq = QuadEq::<u8> {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 1,
+        modu: 2,
+    };
+    // quad_eq sols: 1
+    let quad_sols: Vec<u8> = vec![1];
+
+    // lift solutions to 2^2
+    match quad_eq.lift_with_hensel_method(quad_sols.clone(), 2) {
+        None => assert!(false),
+        Some(mut lifted) => {
+            assert_eq!(lifted.len(), 2);
+            lifted.sort();
+            assert_eq!(lifted, vec![1, 3]);
+        }
+    }
+
+    // lift solutions to 2^3
+    match quad_eq.lift_with_hensel_method(quad_sols.clone(), 3) {
+        None => assert!(false),
+        Some(mut lifted) => {
+            assert_eq!(lifted.len(), 4);
+            lifted.sort();
+            assert_eq!(lifted, vec![1, 3, 5, 7]);
+        }
+    }
+
+    // lift solutions to 2^4
+    match quad_eq.lift_with_hensel_method(quad_sols.clone(), 4) {
+        None => assert!(false),
+        Some(mut lifted) => {
+            assert_eq!(lifted.len(), 4);
+            lifted.sort();
+            assert_eq!(lifted, vec![1, 7, 9, 15]);
+        }
+    }
+
+    // lift solutions to 2^5
+    match quad_eq.lift_with_hensel_method(quad_sols.clone(), 5) {
+        None => assert!(false),
+        Some(mut lifted) => {
+            assert_eq!(lifted.len(), 4);
+            lifted.sort();
+            assert_eq!(lifted, vec![1, 15, 17, 31]);
+        }
     }
 }
 
@@ -1022,61 +1209,50 @@ fn eq_large_signed_type_composite_mod_count_of_solutions() {
 }
 
 #[test]
-fn eq_small_type_mod_two_or_four() {
-    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod modu)
-    // modulo is some power of two
+fn eq_small_type_b_zero_mod_two_no_solution() {
+    // a ev, d odd => no solution
+    let quad_eq = QuadEq {
+        a: 8,
+        b: 0,
+        c: 0,
+        d: 5,
+        modu: 2u8,
+    };
 
-    let test_cases: [[u8; 5]; 20] = [
-        [2, 0, 0, 0, 2],
-        [2, 0, 2, 2, 2],
-        [1, 0, 3, 0, 2],
-        [1, 0, 0, 1, 2],
-        [1, 0, 0, 0, 2],
-        [1, 0, 2, 0, 2],
-        [1, 0, 1, 3, 2],
-        [1, 0, 1, 4, 2],
-        [7, 0, 1, 0, 4],
-        [7, 0, 1, 1, 4],
-        [1, 0, 1, 1, 4],
-        [2, 0, 2, 2, 4],
-        [12, 0, 12, 12, 4],
-        [10, 0, 12, 10, 4],
-        [2, 0, 1, 3, 4],
-        [2, 0, 1, 1, 4],
-        [4, 0, 0, 0, 4],
-        [1, 0, 0, 17, 4],
-        [1, 0, 31, 0, 4],
-        [8, 0, 12, 0, 4],
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+}
+
+#[test]
+fn eq_small_type_mod_two() {
+    let modu = 2;
+
+    // [a, b, c, d]: ax^2 + bx + c = d (mod 2)
+    let test_cases: [[u8; 4]; 7] = [
+        [1, 0, 3, 0],
+        [1, 0, 0, 1],
+        [1, 0, 0, 0],
+        [1, 0, 2, 0],
+        [1, 0, 1, 3],
+        [1, 0, 1, 4],
+        [1, 1, 0, 0],
     ];
 
-    let correct_sols: [[u8; 4]; 20] = [
+    let correct_sols: [[u8; 4]; 7] = [
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
         [0, 1, 0, 0],
-        [0, 1, 0, 0],
-        [1, 0, 0, 0],
-        [1, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [1, 0, 0, 0],
-        [1, 3, 0, 0],
-        [0, 2, 0, 0],
-        [0, 2, 0, 0],
-        [0, 2, 0, 0],
-        [0, 1, 2, 3],
-        [1, 3, 0, 0],
-        [1, 3, 0, 0],
-        [0, 2, 0, 0],
-        [0, 1, 2, 3],
-        [1, 3, 0, 0],
-        [1, 3, 0, 0],
-        [0, 1, 2, 3],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());
 
     for (test, corr) in it {
-        let modu = test[4];
-
         let quad_eq = QuadEq {
             a: test[0],
             b: test[1],
@@ -1090,18 +1266,348 @@ fn eq_small_type_mod_two_or_four() {
 }
 
 #[test]
-fn eq_mod_higher_power_of_two() {
-    let test_cases: [[u128; 5]; 4] = [
+fn eq_small_type_b_zero_mod_four_no_solution() {
+    // a % 4 = 1 or 3, d even but d % 4 > 0 => no solution
+
+    let mut quad_eq = QuadEq {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 2,
+        modu: 4u8,
+    };
+
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+
+    quad_eq.a = 3;
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+
+    // d odd, a^-1 does not exists or a^-1 * d % 4 != 1 => no solution
+    quad_eq.a = 2;
+    quad_eq.d = 1;
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+
+    quad_eq.a = 3;
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+
+    quad_eq.a = 1;
+    quad_eq.d = 3;
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+}
+
+#[test]
+fn eq_small_type_b_zero_mod_four() {
+    let modu = 4;
+
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod 4)
+    let test_cases: [[u8; 4]; 14] = [
+        // d_div_by_four, a % 4 != 0
+        [1, 0, 0, 0],
+        [2, 0, 0, 0],
+        [3, 0, 0, 0],
+        [1, 0, 0, 4],
+        [3, 0, 0, 4],
+        // d even but d % 4 != 0, a % 4 = 2
+        [2, 0, 0, 2],
+        [2, 0, 0, 6],
+        [2, 0, 0, 10],
+        [6, 0, 0, 2],
+        // d odd, gcd(a, 4) = 1 and a^-1 * d % 4 = 1
+        [1, 0, 0, 1],
+        [5, 0, 0, 1],
+        [1, 0, 0, 5],
+        [1, 0, 0, 9],
+        [5, 0, 0, 5],
+    ];
+
+    let correct_sols: [[u8; 4]; 14] = [
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+        [1, 3, 0, 0],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_small_type_mod_four() {
+    let modu = 4;
+
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod 4)
+    let test_cases: [[u8; 4]; 12] = [
+        [2, 2, 0, 0],
+        [2, 1, 0, 0],
+        [2, 3, 0, 0],
+        [1, 1, 0, 0],
+        [2, 1, 0, 0],
+        [3, 1, 0, 0],
+        [1, 2, 0, 0],
+        [3, 2, 0, 0],
+        [1, 1, 2, 0],
+        [1, 2, 1, 0],
+        [1, 3, 2, 0],
+        [2, 3, 3, 0],
+    ];
+
+    let correct_sols: [[u8; 4]; 12] = [
+        [0, 1, 2, 3],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 3, 0, 0],
+        [0, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [1, 2, 0, 0],
+        [1, 3, 0, 0],
+        [2, 3, 0, 0],
+        [1, 0, 0, 0],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_mid_type_mod_eight() {
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod 8)
+
+    let modu = 8;
+
+    let test_cases: [[u8; 4]; 15] = [
+        [1, 1, 2, 0],
+        [7, 7, 2, 0],
+        [1, 2, 1, 0],
+        [1, 4, 3, 0],
+        [1, 4, 4, 0],
+        [7, 4, 4, 0],
+        [6, 7, 1, 0],
+        [6, 5, 4, 0],
+        [4, 3, 2, 0],
+        [6, 6, 4, 0],
+        [6, 2, 4, 0],
+        [4, 2, 2, 0],
+        [2, 4, 2, 0],
+        [6, 6, 4, 0],
+        [6, 2, 4, 0],
+    ];
+
+    let correct_sols: [[u8; 4]; 15] = [
+        [2, 5, 0, 0],
+        [1, 6, 0, 0],
+        [3, 7, 0, 0],
+        [1, 3, 5, 7],
+        [2, 6, 0, 0],
+        [2, 6, 0, 0],
+        [7, 0, 0, 0],
+        [4, 0, 0, 0],
+        [2, 0, 0, 0],
+        [1, 2, 5, 6],
+        [2, 3, 6, 7],
+        [1, 5, 0, 0],
+        [1, 3, 5, 7],
+        [1, 2, 5, 6],
+        [2, 3, 6, 7],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_small_type_b_zero_mod_eight() {
+    // [a, b, c, d, modu]: ax^2 + bx + c = d (mod 8)
+
+    let modu = 8;
+
+    let test_cases: [[u8; 4]; 8] = [
+        [1, 0, 0, 1],
+        [1, 0, 0, 9],
+        [1, 0, 0, 0],
+        [3, 0, 0, 0],
+        [3, 0, 8, 0],
+        [3, 0, 0, 8],
+        [5, 0, 0, 0],
+        [7, 0, 0, 0],
+    ];
+
+    let correct_sols: [[u8; 4]; 8] = [
+        [1, 3, 5, 7],
+        [1, 3, 5, 7],
+        [0, 4, 0, 0],
+        [0, 4, 0, 0],
+        [0, 4, 0, 0],
+        [0, 4, 0, 0],
+        [0, 4, 0, 0],
+        [0, 4, 0, 0],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_mid_type_general_mod_power_of_two() {
+    let modu = 64;
+
+    // [a, b, c, d]: ax^2 + bx + c = d (mod modu)
+    // test possible combinations of even and odd terms a, b and c (<=> d)
+
+    let test_cases: [[u32; 4]; 12] = [
+        [1, 2, 8, 0],
+        [1, 2, 24, 0],
+        [1, 2, 49, 0],
+        [1, 2, 61, 0],
+        [1, 3, 2, 0],
+        [1, 3, 60, 0],
+        [2, 1, 1, 0],
+        [2, 3, 4, 0],
+        [2, 2, 4, 0],
+        [2, 2, 60, 0],
+        [62, 62, 60, 0],
+        [62, 63, 1, 0],
+    ];
+
+    let correct_sols: [[u32; 8]; 12] = [
+        [10, 20, 42, 52, 0, 0, 0, 0],
+        [12, 18, 44, 50, 0, 0, 0, 0],
+        [3, 11, 19, 27, 35, 43, 51, 59],
+        [1, 13, 17, 29, 33, 45, 49, 61],
+        [62, 63, 0, 0, 0, 0, 0, 0],
+        [1, 60, 0, 0, 0, 0, 0, 0],
+        [45, 0, 0, 0, 0, 0, 0, 0],
+        [52, 0, 0, 0, 0, 0, 0, 0],
+        [5, 26, 37, 58, 0, 0, 0, 0],
+        [1, 30, 33, 62, 0, 0, 0, 0],
+        [5, 26, 37, 58, 0, 0, 0, 0],
+        [63, 0, 0, 0, 0, 0, 0, 0],
+    ];
+
+    let it = test_cases.iter().zip(correct_sols.iter());
+
+    for (test, corr) in it {
+        let quad_eq = QuadEq {
+            a: test[0],
+            b: test[1],
+            c: test[2],
+            d: test[3],
+            modu,
+        };
+
+        check_multiple_sols_correctness(quad_eq.solve(), corr, modu);
+    }
+}
+
+#[test]
+fn eq_mid_type_general_mod_power_of_two_no_solution() {
+    // even, even, odd and odd, odd, odd combinations for a, b and c should give no results
+
+    let mut quad_eq = QuadEq::<u32> {
+        a: 8,
+        b: 12,
+        c: 1,
+        d: 0,
+        modu: 64,
+    };
+
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+
+    quad_eq.a = 1;
+    quad_eq.b = 63;
+    quad_eq.c = 1;
+
+    match quad_eq.solve() {
+        None => assert!(true),
+        Some(sols) => assert!(false, "corr: None, received: {:?}", sols),
+    }
+}
+
+#[test]
+fn eq_large_type_mix_mod_higher_power_of_two() {
+    let test_cases: [[u128; 5]; 3] = [
         [1, 0, 15, 0, 4_294_967_296],
         [1, 0, 25_151_551, 0, 4_611_686_018_427_387_904],
+        [7, 0, 0, 0, 128],
         // [7, 0, 1, 0, 4096],
         // [7, 0, 4, 0, 8],
         // [7, 0, 4, 0, 64],
-        [4, 4, 24, 0, 32],
-        [1, 0, 0, 1, 72],
     ];
 
-    let correct_sols: [[u128; 8]; 4] = [
+    let correct_sols: [[u128; 8]; 3] = [
         [
             34_716_455,
             2_112_767_193,
@@ -1122,11 +1628,10 @@ fn eq_mod_higher_power_of_two() {
             0,
             0,
         ],
+        [0, 16, 32, 48, 64, 80, 96, 112],
         // [611, 1437, 2659, 3485, 0, 0, 0, 0],
         // [2, 6, 0, 0, 0, 0, 0, 0],
         // [6, 10, 22, 26, 38, 42, 54, 58],
-        [1, 6, 9, 14, 17, 22, 25, 30],
-        [1, 17, 19, 35, 37, 53, 55, 71],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());

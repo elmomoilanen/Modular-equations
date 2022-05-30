@@ -2,8 +2,11 @@
 //!
 //! Modular linear equations are of the form ax + b = c (mod n) where
 //! every term or element is a residue class \[*\] belonging to the ring
-//! of integers Z/nZ. Modulo term `n` must be a positive integer
-//! and strictly larger than one.
+//! of integers Z/nZ. Modulo term `n` must be a positive integer and
+//! strictly larger than one.
+//!
+//! Solutions x, if any, will be given as residue classes \[x\] such that
+//! each class is represented by smallest nonnegative integer (modulo n).
 //!
 use crate::{
     arith::{Arith, SignCast},
@@ -11,12 +14,14 @@ use crate::{
 };
 use num::iter;
 
-/// Type for linear equations with only unsigned terms.
+/// Type for linear equations with unsigned terms only.
 ///
-/// Linear modular equations are of the form ax + b = c (mod n) where
-/// terms `a`, `b` and `c` must be nonnegative for this type. Also modulo `n`
+/// Linear modular equations are of the form ax + b = c (mod modu) where
+/// terms `a`, `b` and `c` must be nonnegative for this type. Also modulo `modu`
 /// must be the same unsigned type and strictly larger than one. Solve method
-/// of this type will panic if the modulo `n` doesn't satisfy this requirement.
+/// of this type will panic if the modulo doesn't satisfy this requirement.
+
+#[derive(Debug)]
 pub struct LinEq<T: UInt> {
     pub a: T,
     pub b: T,
@@ -26,11 +31,14 @@ pub struct LinEq<T: UInt> {
 
 /// Type for linear equations with unsigned modulo and signed other terms.
 ///
-/// Linear modular equations are of the form ax + b = c (mod n) where
-/// terms `a`, `b` and `c` are signed for this type. Modulo `n` must be
-/// an unsigned type but compatible to the signed type, e.g. u32 if signed type
-/// is i32, and strictly larger than one as its value. Solve method of this type
-/// will panic if the modulo `n` doesn't satisfy this requirement.
+/// Linear modular equations are of the form ax + b = c (mod modu) where
+/// terms `a`, `b` and `c` are signed for this type. Modulo `modu` must be
+/// an unsigned type but compatible to the signed type (same byte count),
+/// e.g. u32 if the signed type is i32, and strictly larger than one as
+/// its value. Solve method of this type will panic if the modulo doesn't
+/// satisfy this requirement.
+
+#[derive(Debug)]
 pub struct LinEqSigned<S: Int, T: UInt> {
     pub a: S,
     pub b: S,
@@ -41,11 +49,14 @@ pub struct LinEqSigned<S: Int, T: UInt> {
 impl<T: UInt> LinEq<T> {
     /// Solve linear modular equation ax + b = c (mod modu).
     ///
-    /// There will be 0-N solutions x, 0 case occurring when gcd(a, modu) doesn't divide
-    /// the c parameter and on the contrary, magnitude of N depending on the equation.
-    /// If gcd(a, modu) == 1, there will be a unique solution.
+    /// There will be 0 to N solutions x, 0 case occurring when gcd(a, modu) doesn't
+    /// divide the c term and on the contrary, magnitude of N depending on the
+    /// equation. If gcd(a, modu) == 1, there will be a unique solution.
+    ///
+    /// If a % modu == 0 (0 is the smallest nonnegative representative of \[a\]),
+    /// there are no solutions since the variable x vanishes from the equation.
     pub fn solve(&self) -> Option<Vec<T>> {
-        if self.modu <= T::one() || self.a == T::zero() {
+        if self.modu <= T::one() || self.a % self.modu == T::zero() {
             return None;
         }
 

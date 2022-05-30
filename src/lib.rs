@@ -13,7 +13,7 @@
 //! Finally, the modular arithmetic system is constructed such that the elements of it
 //! are so called residue or congruence classes \[x\], where one class \[x\] is consisting
 //! of all the integers congruent to x modulo M, or in other words all integers of the form
-//! {..., x - M, x, x + M, ...} = {x + k * M}, k being a integer belonging to Z. Hence,
+//! {..., x - M, x, x + M, ...} = {x + k * M}, k being an integer belonging to Z. Hence,
 //! in principle, all of these integers {x + k * M} are valid representatives of their
 //! residue class \[x\] but the common way is to use the smallest nonnegative integer (modulo M)
 //! to represent the residue class. As the congruence relation is an equivalence relation,
@@ -42,7 +42,7 @@
 //! };
 //! let sol = lin_eq.solve();
 //!
-//! // residue class [8] is the correct solution (smallest nonnegative member)
+//! // residue class \[8\] is the correct solution (smallest nonnegative member)
 //! assert!(sol.is_some() && sol.unwrap()[0] == 8);
 //! ```
 //!
