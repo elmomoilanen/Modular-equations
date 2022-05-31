@@ -6,6 +6,16 @@ fn compare_arrays<T: UInt>(left_arr: &[T], right_arr: &[T]) {
     // right_arr can be larger as it might contain zero padding
     assert!(left_arr.len() <= right_arr.len());
 
+    if right_arr.len() > left_arr.len() {
+        // extra elements must be just zero padding
+        assert_eq!(
+            right_arr[left_arr.len()],
+            T::zero(),
+            "{}th element in correct sols array is not zero.",
+            left_arr.len()
+        );
+    }
+
     for (elem_l, elem_r) in left_arr.iter().zip(right_arr.iter()) {
         assert_eq!(
             *elem_l, *elem_r,
@@ -18,6 +28,16 @@ fn compare_arrays<T: UInt>(left_arr: &[T], right_arr: &[T]) {
 fn compare_arrays_of_tuples<T: UInt, U: UInt>(left_arr: &[(T, U)], right_arr: &[(T, U)]) {
     // right_arr can be larger as it might contain zero padding
     assert!(left_arr.len() <= right_arr.len());
+
+    if right_arr.len() > left_arr.len() {
+        // extra elements must be just zero padding
+        assert_eq!(
+            right_arr[left_arr.len()],
+            (T::zero(), U::zero()),
+            "{}th element in correct sols array is not zero.",
+            left_arr.len()
+        );
+    }
 
     for (elem_l, elem_r) in left_arr.iter().zip(right_arr.iter()) {
         assert_eq!(

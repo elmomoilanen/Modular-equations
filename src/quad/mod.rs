@@ -357,7 +357,11 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         // take out common powers of two if possible
-        let t = largest_common_dividing_power_of_two(self.a.into(), self.b.into(), self.d.into());
+        let t = largest_common_dividing_power_of_two(
+            (self.a % total_modulo).into(),
+            (self.b % total_modulo).into(),
+            (self.d % total_modulo).into(),
+        );
         let m_prm_k = prm_k - t; // always >= 0
 
         let mut m_quad = QuadEq { ..*self };
@@ -462,13 +466,6 @@ impl<T: 'static + UInt> QuadEq<T> {
             return Some(iter::range_step(T::zero(), total_modulo, step).collect());
         }
 
-        // TEMP
-        let d_sqrt = integer::sqrt(d);
-        if T::trunc_square(d_sqrt) == d {
-            let base: Vec<T> = vec![d_sqrt];
-            return Some(base);
-        } // TEMP
-
         if d % 8.into() == T::one() {
             // odd squares
             let mut sols: Vec<T> = vec![];
@@ -488,8 +485,18 @@ impl<T: 'static + UInt> QuadEq<T> {
                 sols.push(s);
                 sols.push(total_modulo - s);
             }
-
             return Some(sols);
+        }
+
+        let d_sqrt = integer::sqrt(d);
+
+        if T::trunc_square(d_sqrt) == d {
+            // even square, base solution for mod 2 equals 0
+            let mut m_quad = QuadEq { ..*self };
+            m_quad.a = T::one();
+            m_quad.d = d;
+
+            return m_quad.lift_with_hensel_method(vec![T::zero()], prm_k);
         }
 
         None
@@ -500,24 +507,21 @@ impl<T: 'static + UInt> QuadEq<T> {
         prm_k: u8,
         total_modulo: T,
     ) -> Option<Vec<T>> {
-        let t =
-            largest_common_dividing_power_of_two((self.a % total_modulo).into(), 2, self.d.into());
+        let t = largest_common_dividing_power_of_two(
+            (self.a % total_modulo).into(),
+            total_modulo.into(),
+            (self.d % total_modulo).into(),
+        );
         let m_prm_k = prm_k - t; // always >= 0
 
-        let sub_sols = if self.d > T::zero() {
-            let mut m_quad = QuadEq { ..*self };
+        let mut m_quad = QuadEq { ..*self };
+        m_quad.a = m_quad.a.unsigned_shr(t.into());
+        m_quad.d = m_quad.d.unsigned_shr(t.into());
+        // either a or d should be odd now
 
-            m_quad.a = m_quad.a.unsigned_shr(t.into());
-            m_quad.d = m_quad.d.unsigned_shr(t.into());
+        let m_total_modulo = self.modu.pow(m_prm_k.into());
 
-            let m_total_modulo = self.modu.pow(m_prm_k.into());
-
-            m_quad.solve_quad_residue_power_of_two_mod(m_prm_k, m_total_modulo)
-        } else {
-            Some(vec![T::zero()])
-        };
-
-        match sub_sols {
+        match m_quad.solve_quad_residue_power_of_two_mod(m_prm_k, m_total_modulo) {
             Some(sols) => self.scale_possible_solutions_mod_power_of_two(sols, prm_k, m_prm_k, t),
             _ => None,
         }
@@ -553,7 +557,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         m_prm_k: u8,
         t: u8,
     ) -> Option<Vec<T>> {
-        let modulo = self.modu.pow(prm_k.into());
+        let modulo = self.modu.pow(prm_k.into()); // original modulo
         let modulo_t = self.modu.pow(t.into()); // >= 1
         let multiplier = self.modu.pow(m_prm_k.into());
 

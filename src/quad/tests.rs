@@ -48,6 +48,7 @@
 //! -> eq_mid_type_mod_eight
 //! -> eq_mid_type_general_mod_power_of_two
 //! -> eq_mid_type_general_mod_power_of_two_no_solution
+//! -> eq_signed_large_type_mix_mod_higher_power_of_two
 //!
 use std::collections::{HashMap, HashSet};
 
@@ -61,14 +62,28 @@ use crate::UInt;
 /// second array doesn't matter.
 fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr: &[T], modu: T) {
     // right_arr can be larger as it might contain zero padding
+    // sols array can contain only one zero, more than that doesn't make sense
     match sols_cand {
-        Some(sols) => {
+        Some(sols) if sols.len() > 0 => {
             assert!(
                 sols.len() <= sols_corr.len(),
                 "mod: {}, correct sols: {:?}",
                 modu,
                 sols_corr
             );
+
+            let sols_corr: Vec<T> = Vec::from(sols_corr);
+
+            if sols_corr.len() > sols.len() {
+                // extra elements must be just zero padding
+                assert_eq!(
+                    sols_corr[sols.len()],
+                    T::zero(),
+                    "{}th element in correct sols array is not zero. All correct sols: {:?}",
+                    sols.len(),
+                    sols_corr
+                );
+            }
 
             for (elem_l, elem_r) in sols.iter().zip(sols_corr.iter()) {
                 assert_eq!(
@@ -78,7 +93,11 @@ fn check_multiple_sols_correctness<T: UInt>(sols_cand: Option<Vec<T>>, sols_corr
                 );
             }
         }
-        None => assert!(false, "x_corr: {:?}, x: None, mod: {}", sols_corr, modu),
+        _ => assert!(
+            false,
+            "x_corr: {:?}, x: None/Empty vector, mod: {}",
+            sols_corr, modu
+        ),
     }
 }
 
@@ -1480,7 +1499,7 @@ fn eq_small_type_b_zero_mod_eight() {
 
     let modu = 8;
 
-    let test_cases: [[u8; 4]; 8] = [
+    let test_cases: [[u8; 4]; 20] = [
         [1, 0, 0, 1],
         [1, 0, 0, 9],
         [1, 0, 0, 0],
@@ -1489,9 +1508,21 @@ fn eq_small_type_b_zero_mod_eight() {
         [3, 0, 0, 8],
         [5, 0, 0, 0],
         [7, 0, 0, 0],
+        [1, 0, 7, 0],
+        [2, 0, 0, 0],
+        [2, 0, 6, 0],
+        [3, 0, 5, 0],
+        [4, 0, 0, 0],
+        [4, 0, 4, 0],
+        [6, 0, 0, 0],
+        [6, 0, 2, 0],
+        [5, 0, 4, 0],
+        [3, 0, 4, 0],
+        [7, 0, 4, 0],
+        [5, 0, 3, 0],
     ];
 
-    let correct_sols: [[u8; 4]; 8] = [
+    let correct_sols: [[u8; 4]; 20] = [
         [1, 3, 5, 7],
         [1, 3, 5, 7],
         [0, 4, 0, 0],
@@ -1500,6 +1531,18 @@ fn eq_small_type_b_zero_mod_eight() {
         [0, 4, 0, 0],
         [0, 4, 0, 0],
         [0, 4, 0, 0],
+        [1, 3, 5, 7],
+        [0, 2, 4, 6],
+        [1, 3, 5, 7],
+        [1, 3, 5, 7],
+        [0, 2, 4, 6],
+        [1, 3, 5, 7],
+        [0, 2, 4, 6],
+        [1, 3, 5, 7],
+        [2, 6, 0, 0],
+        [2, 6, 0, 0],
+        [2, 6, 0, 0],
+        [1, 3, 5, 7],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());
@@ -1524,7 +1567,7 @@ fn eq_mid_type_general_mod_power_of_two() {
     // [a, b, c, d]: ax^2 + bx + c = d (mod modu)
     // test possible combinations of even and odd terms a, b and c (<=> d)
 
-    let test_cases: [[u32; 4]; 12] = [
+    let test_cases: [[u32; 4]; 16] = [
         [1, 2, 8, 0],
         [1, 2, 24, 0],
         [1, 2, 49, 0],
@@ -1537,9 +1580,13 @@ fn eq_mid_type_general_mod_power_of_two() {
         [2, 2, 60, 0],
         [62, 62, 60, 0],
         [62, 63, 1, 0],
+        [7, 0, 4, 0],
+        [1, 0, 0, 4],
+        [1, 0, 0, 16],
+        [1, 0, 0, 36],
     ];
 
-    let correct_sols: [[u32; 8]; 12] = [
+    let correct_sols: [[u32; 8]; 16] = [
         [10, 20, 42, 52, 0, 0, 0, 0],
         [12, 18, 44, 50, 0, 0, 0, 0],
         [3, 11, 19, 27, 35, 43, 51, 59],
@@ -1552,6 +1599,10 @@ fn eq_mid_type_general_mod_power_of_two() {
         [1, 30, 33, 62, 0, 0, 0, 0],
         [5, 26, 37, 58, 0, 0, 0, 0],
         [63, 0, 0, 0, 0, 0, 0, 0],
+        [6, 10, 22, 26, 38, 42, 54, 58],
+        [2, 14, 18, 30, 34, 46, 50, 62],
+        [4, 12, 20, 28, 36, 44, 52, 60],
+        [6, 10, 22, 26, 38, 42, 54, 58],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());
@@ -1597,17 +1648,27 @@ fn eq_mid_type_general_mod_power_of_two_no_solution() {
 }
 
 #[test]
-fn eq_large_type_mix_mod_higher_power_of_two() {
-    let test_cases: [[u128; 5]; 3] = [
-        [1, 0, 15, 0, 4_294_967_296],
-        [1, 0, 25_151_551, 0, 4_611_686_018_427_387_904],
-        [7, 0, 0, 0, 128],
-        // [7, 0, 1, 0, 4096],
-        // [7, 0, 4, 0, 8],
-        // [7, 0, 4, 0, 64],
+fn eq_signed_large_type_mix_mod_higher_power_of_two() {
+    let test_cases: [(i128, i128, i128, i128, u128); 8] = [
+        (1, 0, 15, 0, 4_294_967_296),
+        (1, 0, 25_151_551, 0, 4_611_686_018_427_387_904),
+        (7, 0, 0, 0, 128),
+        (7, 0, 1, 0, 4096),
+        // mod 2^50
+        (1, 0, 0, 1, 1_125_899_906_842_624),
+        (-1, 1, 1, 1, 1_125_899_906_842_624),
+        (-111, 11, 11, -11, 1_125_899_906_842_624),
+        // mod 2^127
+        (
+            1,
+            0,
+            0,
+            1,
+            170_141_183_460_469_231_731_687_303_715_884_105_728,
+        ),
     ];
 
-    let correct_sols: [[u128; 8]; 3] = [
+    let correct_sols: [[u128; 8]; 8] = [
         [
             34_716_455,
             2_112_767_193,
@@ -1629,21 +1690,41 @@ fn eq_large_type_mix_mod_higher_power_of_two() {
             0,
         ],
         [0, 16, 32, 48, 64, 80, 96, 112],
-        // [611, 1437, 2659, 3485, 0, 0, 0, 0],
-        // [2, 6, 0, 0, 0, 0, 0, 0],
-        // [6, 10, 22, 26, 38, 42, 54, 58],
+        [611, 1437, 2659, 3485, 0, 0, 0, 0],
+        [
+            1,
+            562_949_953_421_311,
+            562_949_953_421_313,
+            1_125_899_906_842_623,
+            0,
+            0,
+            0,
+            0,
+        ],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        [667_731_441_266_099, 742_179_252_888_178, 0, 0, 0, 0, 0, 0],
+        [
+            1,
+            85_070_591_730_234_615_865_843_651_857_942_052_863,
+            85_070_591_730_234_615_865_843_651_857_942_052_865,
+            170_141_183_460_469_231_731_687_303_715_884_105_727,
+            0,
+            0,
+            0,
+            0,
+        ],
     ];
 
     let it = test_cases.iter().zip(correct_sols.iter());
 
     for (test, corr) in it {
-        let modu = test[4];
+        let modu = test.4;
 
-        let quad_eq = QuadEq {
-            a: test[0],
-            b: test[1],
-            c: test[2],
-            d: test[3],
+        let quad_eq = QuadEqSigned {
+            a: test.0,
+            b: test.1,
+            c: test.2,
+            d: test.3,
             modu,
         };
 
