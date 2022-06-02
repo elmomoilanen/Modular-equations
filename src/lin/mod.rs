@@ -1,11 +1,11 @@
 //! Implements a solver for linear modular equations.
 //!
 //! Modular linear equations are of the form ax + b = c (mod n) where
-//! every term or element is a residue class \[*\] belonging to the ring
-//! of integers Z/nZ. Modulo term `n` must be a positive integer and
+//! every coefficient or term is a residue class \[*\] belonging to
+//! the ring of integers Z/nZ. Modulo n must be a positive integer and
 //! strictly larger than one.
 //!
-//! Solutions x, if any, will be given as residue classes \[x\] such that
+//! Solutions x, if any, are given as residue classes \[x\] such that
 //! each class is represented by smallest nonnegative integer (modulo n).
 //!
 use crate::{
@@ -17,9 +17,9 @@ use num::iter;
 /// Type for linear equations with unsigned terms only.
 ///
 /// Linear modular equations are of the form ax + b = c (mod modu) where
-/// terms `a`, `b` and `c` must be nonnegative for this type. Also modulo `modu`
-/// must be the same unsigned type and strictly larger than one. Solve method
-/// of this type will panic if the modulo doesn't satisfy this requirement.
+/// coefficients `a`, `b` and `c` must be nonnegative for this type. Also
+/// `modu` must be the same unsigned type and strictly larger than one. Solve
+/// method of this type will panic if the modulo doesn't satisfy this requirement.
 
 #[derive(Debug)]
 pub struct LinEq<T: UInt> {
@@ -29,11 +29,11 @@ pub struct LinEq<T: UInt> {
     pub modu: T,
 }
 
-/// Type for linear equations with unsigned modulo and signed other terms.
+/// Type for linear equations with unsigned modulo and signed other coefficients.
 ///
 /// Linear modular equations are of the form ax + b = c (mod modu) where
-/// terms `a`, `b` and `c` are signed for this type. Modulo `modu` must be
-/// an unsigned type but compatible to the signed type (same byte count),
+/// coefficients `a`, `b` and `c` are signed for this type. Modulo `modu`
+/// must be an unsigned type but compatible to the signed type (same byte count),
 /// e.g. u32 if the signed type is i32, and strictly larger than one as
 /// its value. Solve method of this type will panic if the modulo doesn't
 /// satisfy this requirement.
@@ -50,7 +50,7 @@ impl<T: UInt> LinEq<T> {
     /// Solve linear modular equation ax + b = c (mod modu).
     ///
     /// There will be 0 to N solutions x, 0 case occurring when gcd(a, modu) doesn't
-    /// divide the c term and on the contrary, magnitude of N depending on the
+    /// divide the c coefficient and on the contrary, magnitude of N depending on the
     /// equation. If gcd(a, modu) == 1, there will be a unique solution.
     ///
     /// If a % modu == 0 (0 is the smallest nonnegative representative of \[a\]),
@@ -94,8 +94,8 @@ where
 {
     /// Solve linear modular equation for signed type terms.
     ///
-    /// This method will try to cast the signed terms to unsigned such that
-    /// after the cast they will represent the smallest nonnegative
+    /// This method will try to cast the signed coefficients to unsigned type
+    /// such that after the cast they will represent the smallest nonnegative
     /// integers of their corresponding residue classes (modulo modu). If some
     /// of the casts fails, this method will panic but this should only occur
     /// for S::min_value() value of the signed type S.

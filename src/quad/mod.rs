@@ -1,11 +1,10 @@
 //! Implements a solver for quadratic modular equations.
 //!
 //! Modular quadratic equations are of the form ax^2 + bx + c = d (mod n) where
-//! every term or element is a residue class \[*\] belonging to the ring of
-//! integers Z/nZ. Modulo term `n` must be a positive integer and strictly
-//! larger than one.
+//! every coefficient or term is a residue class \[*\] belonging to the ring of
+//! integers Z/nZ. Modulo `n` must be a positive integer and strictly larger than one.
 //!
-//! Solutions x, if any, will be given as residue classes \[x\] such that
+//! Solutions x, if any, are given as residue classes \[x\] such that
 //! each class is represented by smallest nonnegative integer (modulo n).
 //!
 use crate::{
@@ -23,7 +22,7 @@ use std::collections::HashSet;
 /// Type for quadratic equations with unsigned terms only.
 ///
 /// Quadratic modular equations are of the form ax^2 + bx + c = d (mod modu) where
-/// terms `a`, `b`, `c` and `d` must be nonnegative for this type. Furthermore,
+/// coefficients `a`, `b`, `c` and `d` must be nonnegative for this type. Furthermore,
 /// the modulo term `modu` must have the same unsigned type as the other terms
 /// and strictly larger than one as its value. Solve method of this type will
 /// panic if the modulo doesn't satisfy this requirement.
@@ -40,11 +39,11 @@ pub struct QuadEq<T: UInt> {
 /// Type for quadratic equations with unsigned modulo and signed other terms.
 ///
 /// Quadratic modular equations are of the form ax^2 + bx + c = d (mod n) where
-/// terms `a`, `b`, `c` and `d` are signed for this type. Modulo `modu` must be
+/// coefficient `a`, `b`, `c` and `d` are signed for this type. Modulo `modu` must be
 /// an unsigned type but compatible to the signed type (same byte count), e.g.
 /// unsigned type u32 would be accepted if the signed type is i32. The modulo
-/// term must be strictly larger than one as its value. Solve method of this type
-/// will panic if the modulo `n` doesn't satisfy this requirement.
+/// n must be strictly larger than one as its value. Solve method of this type
+/// will panic if the modulo doesn't satisfy this requirement.
 
 #[derive(Debug)]
 pub struct QuadEqSigned<S: Int, T: UInt> {
