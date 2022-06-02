@@ -1,15 +1,11 @@
 # Modular equations
 
-Instructions to be added...
+Program to solve quadratic and linear modular equations `ax^2 + bx + c = d (mod n)`.
 
 ## Install ##
 
-Install guide here...
 
 ## Use ##
 
-Use guide here...
 
 ## License ##
-
-Link to license here...

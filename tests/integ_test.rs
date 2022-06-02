@@ -1,8 +1,8 @@
 //! Integration tests.
 //!
-//! Test linear and quadratic equations.
+//! Tests for linear and quadratic equations.
 //!
-use modular_equations::{LinEq, LinEqSigned};
+use modular_equations::{LinEq, LinEqSigned, QuadEq, QuadEqSigned};
 
 #[test]
 fn linear_equation() {
@@ -21,6 +21,24 @@ fn linear_equation() {
 }
 
 #[test]
+fn quadratic_equation() {
+    let quad_eq = QuadEq::<u8> {
+        a: 111,
+        b: 1,
+        c: 250,
+        d: 1,
+        modu: 255,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) if sols.len() == 2 => {
+            assert_eq!(sols, vec![42, 177]);
+        }
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn signed_linear_equation() {
     let lin_eq = LinEqSigned::<i16, u16> {
         a: -1,
@@ -36,6 +54,32 @@ fn signed_linear_equation() {
             // correct solution is 5
             assert_eq!(sol[0], 5);
         }
+    }
+}
+
+#[test]
+fn signed_quadratic_equation() {
+    let quad_eq = QuadEqSigned::<i128, u128> {
+        a: -11,
+        b: 99,
+        c: 0,
+        d: -110,
+        modu: 20871587710370244961,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) if sols.len() == 4 => {
+            assert_eq!(
+                sols,
+                vec![
+                    10,
+                    7399711637570012490,
+                    13471876072800232480,
+                    20871587710370244960
+                ]
+            );
+        }
+        _ => assert!(false),
     }
 }
 
@@ -115,6 +159,56 @@ fn linear_equation_large_modulo() {
 }
 
 #[test]
+fn quadratic_equation_large_modulo() {
+    let quad_eq = QuadEq::<u128> {
+        a: 1,
+        b: 1,
+        c: 0,
+        d: 1,
+        modu: 416_997_623_116_370_028_124_580_469_121,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) if sols.len() == 2 => {
+            assert_eq!(
+                sols,
+                vec![
+                    137_307_780_239_429_241_193_741_330_788,
+                    279_689_842_876_940_786_930_839_138_332
+                ]
+            );
+        }
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn quadratic_equation_semiprime_modulo() {
+    let quad_eq = QuadEq::<u128> {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 110,
+        modu: 90_124_258_835_295_998_242_413_094_252_351,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) if sols.len() == 4 => {
+            assert_eq!(
+                sols,
+                vec![
+                    29_129_589_224_271_400_202_982_829_638_184,
+                    43_668_906_256_281_904_644_985_325_179_904,
+                    46_455_352_579_014_093_597_427_769_072_447,
+                    60_994_669_611_024_598_039_430_264_614_167,
+                ]
+            );
+        }
+        _ => assert!(false),
+    }
+}
+
+#[test]
 #[should_panic(expected = "arg `a` cannot be casted to unsigned.")]
 fn linear_equation_failure() {
     let lin_eq = LinEqSigned::<i64, u64> {
@@ -125,4 +219,18 @@ fn linear_equation_failure() {
     };
 
     lin_eq.solve();
+}
+
+#[test]
+#[should_panic(expected = "arg `a` cannot be casted to unsigned.")]
+fn quadratic_equation_failure() {
+    let quad_eq = QuadEqSigned::<i32, u32> {
+        a: i32::MIN, // should cause panic, no abs value in 2's complement
+        b: 1,
+        c: -1,
+        d: -1,
+        modu: 15,
+    };
+
+    quad_eq.solve();
 }

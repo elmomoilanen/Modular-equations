@@ -1,5 +1,27 @@
-//! TODO: CLI documentation
+//! CLI for the modular equations program.
 //!
+//! In its most general form, modular equation means here a equation of
+//! ax^2 + bx + c = d (mod M). If the a term equals zero, the equation
+//! becomes a linear equation.
+//!
+//! Terms (or coefficients in other words) from a to d are restricted
+//! to be a signed type and the modulo M corresponding unsigned type.
+//! This restriction applies only for the CLI, not for the library.
+//!
+//! Following example shows how to solve a linear equation, assuming
+//! that the binary has been built first (e.g. with command cargo build
+//! --release)
+//!
+//! ```bash
+//! ./target/release/modular_equations b c d M
+//! ```
+//!
+//! Solving quadratic equation is almost the same, one just need to add
+//! the a term as the following example shows
+//!
+//! ```bash
+//! ./target/release/modular_equations a b c d M
+//! ```
 //!
 use std::{env, process};
 
