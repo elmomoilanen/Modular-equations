@@ -8,14 +8,14 @@ Solutions, if any, are given as residue classes represented by the smallest nonn
 
 ## Install ##
 
-For the library version, add the following to your `Cargo.toml`
+For the library target, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
 modular_equations = "1.0"
 ```
 
-To use the CLI, you may just clone this repo and run `cargo build --release` againts it afterwards.
+For the binary target, easiest way to install is just to run `cargo install modular_equations` and make sure that the installation location is in $PATH. Then command `modular_equations --help` should work and show further usage advice.
 
 ## Use ##
 
@@ -63,7 +63,7 @@ assert_eq!(lin_eq.solve(), None);
 CLI usage should also be simple as the following example of solving the same quadratic equation as above indicates
 
 ```bash
-./target/release/modular_equations 1 3 2 0 $((2 ** 30))
+modular_equations 1 3 2 0 $((2 ** 30))
 ```
 
 Solutions for the equation are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type.

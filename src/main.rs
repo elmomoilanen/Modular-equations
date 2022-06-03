@@ -8,18 +8,17 @@
 //! for the CLI, not for the library.
 //!
 //! Following example shows how to solve a linear equation, assuming
-//! that the binary has been built first (e.g. with command cargo build
-//! --release)
+//! that the binary has been built first or just installed
 //!
 //! ```bash
-//! ./target/release/modular_equations b c d n
+//! modular_equations b c d n
 //! ```
 //!
 //! Solving quadratic equation is almost the same, one just need to add
-//! the a term as the following example shows
+//! the a coefficient as the following example shows
 //!
 //! ```bash
-//! ./target/release/modular_equations a b c d n
+//! modular_equations a b c d n
 //! ```
 //!
 use std::{env, process};
