@@ -234,3 +234,50 @@ fn quadratic_equation_failure() {
 
     quad_eq.solve();
 }
+
+#[test]
+fn linear_equation_readme() {
+    let lin_eq = LinEq::<u8> {
+        a: 17,
+        b: 0,
+        c: 1,
+        modu: u8::MAX,
+    };
+
+    assert_eq!(lin_eq.solve(), None);
+}
+
+#[test]
+fn quadratic_equation_readme() {
+    let quad_eq = QuadEq::<u32> {
+        a: 1,
+        b: 3,
+        c: 2,
+        d: 0,
+        modu: 2u32.pow(30),
+    };
+
+    if let Some(x) = quad_eq.solve() {
+        assert_eq!(x, vec![1_073_741_822, 1_073_741_823]);
+    } else {
+        assert!(false);
+    }
+}
+
+#[test]
+fn quadratic_signed_equation_readme() {
+    let quad_eq = QuadEqSigned::<i128, u128> {
+        a: -1,
+        b: 2,
+        c: -1,
+        d: 0,
+        modu: 2_082_064_493_491_567_088_228_629_031_592_644_077,
+    };
+
+    if let Some(x) = quad_eq.solve() {
+        // Residue class [1] is the only solution
+        assert_eq!(x, vec![1]);
+    } else {
+        assert!(false);
+    }
+}
