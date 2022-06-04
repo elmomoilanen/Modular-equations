@@ -1,13 +1,15 @@
 [package]
 name = "modular_equations"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Elmo Moilanen"]
 edition = "2021"
 license = "CC0-1.0"
 
 description = "Program to solve quadratic and linear modular equations."
+
 keywords = ["modular-arithmetic", "congruence", "linear-equations", "quadratic-equations"]
-categories = ["Mathematics"]
+categories = ["mathematics"]
+
 repository = "https://github.com/elmomoilanen/Modular-equations"
 readme = "README.md"
 
