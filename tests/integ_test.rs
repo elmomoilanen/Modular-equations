@@ -248,7 +248,7 @@ fn linear_equation_readme() {
 }
 
 #[test]
-fn quadratic_equation_readme() {
+fn quadratic_equation_readme_old() {
     let quad_eq = QuadEq::<u32> {
         a: 1,
         b: 3,
@@ -259,6 +259,23 @@ fn quadratic_equation_readme() {
 
     if let Some(x) = quad_eq.solve() {
         assert_eq!(x, vec![1_073_741_822, 1_073_741_823]);
+    } else {
+        assert!(false);
+    }
+}
+
+#[test]
+fn quadratic_equation_readme() {
+    let quad_eq = QuadEq::<u64> {
+        a: 1,
+        b: 3,
+        c: 4,
+        d: 0,
+        modu: 2u64.pow(60),
+    };
+
+    if let Some(x) = quad_eq.solve() {
+        assert_eq!(x, vec![226_765_812_977_082_276, 926_155_691_629_764_697]);
     } else {
         assert!(false);
     }

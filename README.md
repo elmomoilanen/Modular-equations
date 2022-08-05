@@ -13,10 +13,10 @@ For the library target, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-modular_equations = "1.0"
+modular_equations = "^1.0"
 ```
 
-For the binary target, easiest way to install is just to run `cargo install modular_equations` and make sure that the installation location is in $PATH. Then command `modular_equations --help` should work and show further usage advice.
+For the binary target, easiest way to install is just to run `cargo install modular_equations` and make sure that the installation location is in $PATH. After that the command `modular_equations --help` should work and show further usage advice.
 
 ## Use ##
 
@@ -25,16 +25,17 @@ After installation, use the library to solve quadratic equations as follows
 ```rust
 use modular_equations::{QuadEq, QuadEqSigned};
 
-// Solve equation x^2 + 3x + 2 = 0 (mod 2^30)
-let quad_eq = QuadEq::<u32> {a: 1, b: 3, c: 2, d: 0, modu: 2u32.pow(30)};
+// Solve equation x^2 + 3x + 4 = 0 (mod 2^60)
+let quad_eq = QuadEq::<u64> {a: 1, b: 3, c: 4, d: 0, modu: 2u64.pow(60)};
 
+// Method `solve` returns Option<Vec<T>>, T is now u64
 if let Some(x) = quad_eq.solve() {
-    // Test that the returned solution `x` is correct
-    assert_eq!(x, vec![1_073_741_822, 1_073_741_823]);
+    // Check that the returned solution `x` is correct
+    assert_eq!(x, vec![226_765_812_977_082_276, 926_155_691_629_764_697]);
 }
 
-// Solve other equation -x^2 + 2x - 1 = 0 (mod n), where modulo `n` is now a semiprime
-// Coefs `a` and `c` are signed, hence must use signed type equation (both types must have the same size in bytes!)
+// Solve equation -x^2 + 2x - 1 = 0 (mod n), modulo `n` is now a semiprime
+// Coefs `a` and `c` are signed, hence use signed type equation
 let quad_eq = QuadEqSigned::<i128, u128> {
     a: -1,
     b: 2,
@@ -54,20 +55,20 @@ Linear modular equations are generally much easier to solve than quadratic equat
 ```rust
 use modular_equations::LinEq;
 
-// Try to solve equation 17x = 1 (mod 255), which basically tries to find the multiplicative inverse of 17 in Z/255Z
+// Try to solve equation 17x = 1 (mod 255)
 let lin_eq = LinEq::<u8> {a: 17, b: 0, c: 1, modu: u8::MAX};
 
-// As 17 doesn't have multiplicative inverse in this case, there aren't solutions for the equation
+// 17 doesn't have multiplicative inverse in this case
 assert_eq!(lin_eq.solve(), None);
 ```
 
-CLI usage should also be simple as the following example of solving the same quadratic equation as above indicates
+Command line usage is simple as the following example of solving the same quadratic equation as above indicates
 
 ```bash
-modular_equations 1 3 2 0 $((2 ** 30))
+modular_equations 1 3 4 0 $((2 ** 60))
 ```
 
-Solutions for the equation are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type.
+Solutions for the equation are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above *i128::MAX* for coefficients of the equation.
 
 ## License ##
 

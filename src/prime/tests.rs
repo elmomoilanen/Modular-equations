@@ -43,15 +43,27 @@ fn is_prime_small_range() {
 }
 
 #[test]
-fn is_prime_smaller_primes() {
+fn is_prime_mr_smaller_primes() {
+    let test_primes: [u32; 20] = [
+        4993, 4999, 5003, 5009, 5011, 5099, 6089, 6091, 6197, 6199, 7883, 7901, 7907, 7919, 7927,
+        7933, 7937, 7949, 8009, 8191,
+    ];
+
+    for prime in test_primes.iter() {
+        assert_eq!(is_odd_prime(*prime), true, "{}", *prime);
+    }
+}
+
+#[test]
+fn is_prime_mr_primes() {
     let test_primes: [u64; 25] = [
-        7927,
-        7933,
-        7937,
-        7949,
-        8009,
-        8191,
+        10_267,
+        11_719,
+        12_097,
+        13_669,
         16_369,
+        120_121,
+        121_151,
         131_071,
         319_993,
         999_331,
@@ -78,7 +90,7 @@ fn is_prime_smaller_primes() {
 }
 
 #[test]
-fn is_prime_smaller_composites() {
+fn is_prime_mr_composites() {
     let test_composites: [u64; 15] = [
         1_795_265_021,
         1_795_265_022,
@@ -103,7 +115,7 @@ fn is_prime_smaller_composites() {
 }
 
 #[test]
-fn is_prime_larger_primes() {
+fn is_prime_strong_bpsw_primes() {
     let test_primes: [u128; 20] = [
         36_893_488_147_419_103_183,
         36_893_488_147_419_102_739,
@@ -133,7 +145,7 @@ fn is_prime_larger_primes() {
 }
 
 #[test]
-fn is_prime_larger_primes_other() {
+fn is_prime_strong_bpsw_larger_primes() {
     let test_primes: [u128; 21] = [
         41_538_374_868_278_621_028_243_970_633_760_399,
         41_538_374_868_278_621_028_243_970_633_760_057,
@@ -164,13 +176,18 @@ fn is_prime_larger_primes_other() {
 }
 
 #[test]
-fn is_prime_large_composites() {
-    let test_composites: [u128; 5] = [
+fn is_prime_strong_bpsw_composites() {
+    let test_composites: [u128; 10] = [
         83_076_749_736_557_242_056_487_941_267_521_531,
         332_306_998_946_228_968_225_951_765_070_086_141,
         5_316_911_983_139_663_491_615_228_241_121_378_303,
+        42_535_295_865_117_307_932_921_825_928_971_026_021,
+        42_535_295_865_117_307_932_921_825_928_971_026_023,
+        42_535_295_865_117_307_932_921_825_928_971_026_029,
         170_141_183_460_469_231_731_687_303_715_884_105_723,
-        // following is u128::MAX and should not cause a panic with this implementation
+        340_282_366_920_938_463_463_374_607_431_768_210_653,
+        340_282_366_920_938_463_463_374_607_431_768_210_657,
+        // following is u128::MAX
         340_282_366_920_938_463_463_374_607_431_768_211_455,
     ];
 

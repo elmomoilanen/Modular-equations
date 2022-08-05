@@ -13,7 +13,10 @@ use std::convert::{Into, TryInto};
 
 use num::{integer, PrimInt};
 
-use crate::{arith::Arith, UInt};
+use crate::{
+    arith::{Arith, CoreArith},
+    UInt,
+};
 
 struct LucasParams<T: UInt>(T, T, T);
 
@@ -70,26 +73,19 @@ fn is_prime_mr<T: UInt>(num: T, bases: &[T]) -> bool {
     let num_odd = num_even.unsigned_shr(pow);
     // num_even = 2^pow * num_odd
 
-    for base in bases.iter() {
+    'base: for base in bases.iter() {
         let mut q = T::exp_mod(*base, num_odd, num);
 
         if q == T::one() || q == num_even {
             continue;
         }
 
-        let mut jump = false;
-
         for _ in 1..pow {
-            q = T::mult_mod(q, q, num);
+            q = T::mult_mod_unsafe(q, q, num);
 
             if q == num_even {
-                jump = true;
-                break;
+                continue 'base;
             }
-        }
-
-        if jump {
-            continue;
         }
 
         return false;
@@ -136,7 +132,7 @@ fn select_lucas_params(num: u128) -> Option<LucasParams<u128>> {
                 let q_temp = (d_orig - 1) >> 2;
                 (1, num - q_temp % num)
             };
-            return Some(LucasParams(d, p, q));
+            return Some(LucasParams(d % num, p % num, q % num));
         }
 
         if jac_sym == 0 && (d_orig < num || d_orig % num != 0) {
@@ -192,11 +188,11 @@ fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
         if round == euler_check_round {
             let luc_q_jac: u128 = match u128::jacobi_symbol(luc_q, num).cmp(&0) {
                 Ordering::Equal => 0,
-                Ordering::Greater => num - luc_q % num,
+                Ordering::Greater => num - luc_q,
                 Ordering::Less => luc_q,
             };
 
-            if u128::add_mod(luc_w, luc_q_jac, num) == 0 {
+            if u128::add_mod_unsafe(luc_w, luc_q_jac, num) == 0 {
                 pass_euler_crit = true;
             }
         }
@@ -206,7 +202,7 @@ fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
         return false;
     }
 
-    if u128::mult_mod(2, luc_q, num) != luc_v % num {
+    if u128::mult_mod_unsafe(2, luc_q, num) != luc_v % num {
         return false;
     }
 
@@ -214,23 +210,23 @@ fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
 }
 
 fn update_lucas_normal_uvq(num: u128, u: &mut u128, v: &mut u128, w: &mut u128) {
-    *u = u128::mult_mod(*u, *v, num);
+    *u = u128::mult_mod_unsafe(*u, *v, num);
 
-    *v = u128::add_mod(
-        u128::mult_mod(*v, *v, num),
-        u128::mult_mod(num - 2, *w, num),
+    *v = u128::add_mod_unsafe(
+        u128::mult_mod_unsafe(*v, *v, num),
+        u128::mult_mod_unsafe(num - 2, *w, num),
         num,
     );
 
-    *w = u128::mult_mod(*w, *w, num);
+    *w = u128::mult_mod_unsafe(*w, *w, num);
 }
 
 fn modify_lucas_coef(x_left: u128, x_right: u128, num: u128) -> u128 {
-    let numer = u128::add_mod(x_left, x_right, num);
+    let numer = u128::add_mod_unsafe(x_left, x_right, num);
 
     if numer & 1 == 1 {
         // decompose both odds to 2k + 1, and compute k1 + k2 + 1 (mod num)
-        u128::add_mod((numer - 1) >> 1, ((num - 1) >> 1) + 1, num)
+        u128::add_mod_unsafe((numer - 1) >> 1, ((num - 1) >> 1) + 1, num)
     } else {
         numer >> 1
     }
@@ -245,13 +241,17 @@ fn update_lucas_odd_bit_uvq(
 ) {
     let LucasParams(d, p, q) = *params;
 
-    let new_u = modify_lucas_coef(u128::mult_mod(p, *u, num), *v, num);
+    let new_u = modify_lucas_coef(u128::mult_mod_unsafe(p, *u, num), *v, num);
 
-    let new_v = modify_lucas_coef(u128::mult_mod(d, *u, num), u128::mult_mod(p, *v, num), num);
+    let new_v = modify_lucas_coef(
+        u128::mult_mod_unsafe(d, *u, num),
+        u128::mult_mod_unsafe(p, *v, num),
+        num,
+    );
 
     *u = new_u;
     *v = new_v;
-    *w = u128::mult_mod(q, *w, num);
+    *w = u128::mult_mod_unsafe(q, *w, num);
 }
 
 #[cfg(test)]
