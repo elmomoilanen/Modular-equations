@@ -3,18 +3,19 @@
 //! In its most general form, modular equation means here a equation of
 //! ax^2 + bx + c = d (mod n).
 //!
-//! Coefficients from a to d are restricted to be a signed type and the
-//! modulo M corresponding unsigned type. This restriction applies only
-//! for the CLI, not for the library.
+//! Coefficients from a to d are restricted to be a signed type and
+//! modulo M the corresponding unsigned type. This restriction applies
+//! only for the CLI, not for the library.
 //!
 //! Following example shows how to solve a linear equation, assuming
-//! that the binary has been built first or just installed
+//! that the binary has been built (or whatever installed) and made
+//! accessible
 //!
 //! ```bash
 //! modular_equations b c d n
 //! ```
 //!
-//! Solving quadratic equation is almost the same, one just need to add
+//! Solving quadratic equation is almost the same, one just needs to add
 //! the a coefficient as the following example shows
 //!
 //! ```bash

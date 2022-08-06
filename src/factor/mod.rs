@@ -1,16 +1,17 @@
 //! Implements integer factorization.
 //!
 //! The complete factorization algorithm consists of
-//! - Trial division with smallest primes.
-//! - Fermat's factorization method, which is useful if the integer is of the form n=(a+b)*(a-b).
-//! - Primality testing, prime module implements Miller-Rabin and strong Baillie-PSW tests.
-//! - Lenstra elliptic-curve factorization with multiple of worker threads.
+//! - Trial division with few of the smallest primes.
+//! - Fermat's factorization method, useful if the integer is of the form n=(a+b)*(a-b).
+//! - Primality testing, module `prime` implements Miller-Rabin and strong Baillie-PSW tests.
+//! - Lenstra elliptic-curve factorization with multiple of worker threads. Module `elliptic`
+//! implements elliptic curve arithmetic needed during factorization.
 //!
-//! Constant `MAX_WORKERS` determines the maximal thread count. The first thread will actually
-//! run wheel factorization targeting smaller prime factors and other threads the actual
-//! elliptic-curve factorization method.
+//! Constant `MAX_WORKERS` defines the maximal thread count. This value must be at least two
+//! and preferably between two and ten (by rough empirical testing). First thread will
+//! actually do wheel factorization targeting smaller prime factors whereas other threads
+//! run the actual elliptic-curve factorization method.
 //!
-use std::convert::Into;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
@@ -18,11 +19,10 @@ use num::integer;
 
 use crate::{arith::Arith, elliptic::EllipticCurve, prime, UInt};
 
-/// Max threads for elliptic curve factorization.
-/// Set this value between 2 and 10.
+/// Thread count for elliptic curve factorization, set between 2 and 10.
 const MAX_WORKERS: usize = 6;
 
-/// Max count of elliptic curves during factorization.
+/// Max count of elliptic curves during single elliptic factorization run.
 const MAX_ELLIPTIC_CURVES: usize = 125;
 
 struct MaybeFactors<T: UInt> {
@@ -45,11 +45,6 @@ impl<T: 'static + UInt> Factors<T> {
 
     /// Factor a positive natural number `self.num` to its prime factors.
     ///
-    /// Number to be factored must be at least two, otherwise this
-    /// method will panic. When calling this method, `factors`
-    /// container will be cleared before starting the actual
-    /// factorization process.
-    ///
     /// After the call, `factors` field of the struct contains
     /// all the prime factors, smallest prime being the first
     /// element in the container. Field `num` remains unmodified.
@@ -58,6 +53,7 @@ impl<T: 'static + UInt> Factors<T> {
     /// number `num` via the prime factor representation.
     pub fn factorize(&mut self) {
         if self.num <= T::one() {
+            // Should never go here if program logic ok
             panic!("Cannot factorize natural number smaller than two");
         }
 
@@ -171,7 +167,7 @@ impl<T: 'static + UInt> Factors<T> {
             let mut num_back = self.factorize_fermat(a, level << 1);
 
             if num_back > T::one() {
-                // factoring not completed, return the original num
+                // Factoring not completed, return the original num
                 num_back = num;
             }
             return num_back;
@@ -219,7 +215,7 @@ impl<T: 'static + UInt> Factors<T> {
             if is_sure_prime || prime::is_odd_prime(ec_factor) {
                 self.factors.push(ec_factor);
             } else {
-                // factor is a power of prime or product of several primes
+                // Factor must be a power of prime or product of several primes
                 let mut factors_inner = Factors::new(ec_factor);
                 factors_inner.factorize_until_completed(ec_factor);
 
@@ -246,6 +242,7 @@ impl<T: 'static + UInt> Factors<T> {
 
             thread::spawn(move || {
                 if worker == 0 {
+                    // Try to find smaller factors with wheel factorization
                     Self::wheel_worker(maybe_factors_mtx_clone, num, sender);
                 } else {
                     Self::elliptic_worker(maybe_factors_mtx_clone, num, sender);
@@ -255,20 +252,33 @@ impl<T: 'static + UInt> Factors<T> {
 
         match receiver.recv() {
             Ok(completed) => {
-                let maybe_factors = maybe_factors_mtx.lock().unwrap();
+                let maybe_factors_guard = match maybe_factors_mtx.lock() {
+                    Ok(mtx_guard) => mtx_guard,
+                    _ => {
+                        eprintln!("Error: maybe_factors_mtx.lock() panicked.");
+                        return num;
+                    }
+                };
 
-                for tuple in (*maybe_factors).factors.iter() {
+                for tuple in (*maybe_factors_guard).factors.iter() {
                     factors.push(*tuple);
                 }
-
                 if completed {
                     T::one()
                 } else {
-                    (*maybe_factors).num
+                    (*maybe_factors_guard).num
                 }
             }
             Err(_) => {
-                panic!("all elliptic workers disconnected, unable to complete factorization.")
+                eprintln!("Error: all elliptic workers disconnected, channel closed.");
+
+                let maybe_factors_guard = maybe_factors_mtx.lock().unwrap();
+
+                for tuple in (*maybe_factors_guard).factors.iter() {
+                    factors.push(*tuple);
+                }
+
+                (*maybe_factors_guard).num
             }
         }
     }
@@ -284,36 +294,50 @@ impl<T: 'static + UInt> Factors<T> {
             let maybe_factor = EllipticCurve::compute_maybe_factor_from_curve(num);
 
             if maybe_factor > T::one() && maybe_factor < num {
-                let mut factors = maybe_factors.lock().unwrap();
+                let mut factors_guard = match maybe_factors.lock() {
+                    Ok(mtx_guard) => mtx_guard,
+                    _ => {
+                        curve_count += 1;
+                        continue;
+                    }
+                };
 
-                if maybe_factor > (*factors).num {
-                    num = (*factors).num;
+                if maybe_factor > (*factors_guard).num {
+                    num = (*factors_guard).num;
                 } else {
                     num = num / maybe_factor;
-                    (*factors).num = num;
-                    (*factors).factors.push((maybe_factor, false));
+                    (*factors_guard).num = num;
+                    (*factors_guard).factors.push((maybe_factor, false));
 
                     if prime::is_odd_prime(num) {
-                        (*factors).factors.push((num, true));
+                        (*factors_guard).factors.push((num, true));
                         num = T::one();
-                        (*factors).num = num;
+                        (*factors_guard).num = num;
                     }
                 }
             } else if maybe_factor == num && prime::is_odd_prime(maybe_factor) {
-                let mut factors = maybe_factors.lock().unwrap();
+                let mut factors_guard = match maybe_factors.lock() {
+                    Ok(mtx_guard) => mtx_guard,
+                    _ => {
+                        curve_count += 1;
+                        continue;
+                    }
+                };
 
-                if maybe_factor == (*factors).num {
+                if maybe_factor == (*factors_guard).num {
                     num = T::one();
-                    (*factors).num = num;
-                    (*factors).factors.push((maybe_factor, true));
+                    (*factors_guard).num = num;
+                    (*factors_guard).factors.push((maybe_factor, true));
                 } else {
-                    num = (*factors).num;
+                    num = (*factors_guard).num;
                 }
             } else if curve_count & 31 == 0 {
-                // update factored number `num`
-                let factors = maybe_factors.lock().unwrap();
-                num = (*factors).num;
+                // Update factored number `num`
+                if let Ok(mtx_guard) = maybe_factors.lock() {
+                    num = (*mtx_guard).num;
+                }
             }
+
             curve_count += 1;
         }
 
@@ -325,42 +349,43 @@ impl<T: 'static + UInt> Factors<T> {
         mut num: T,
         sender: mpsc::Sender<bool>,
     ) {
-        // use basis {2, 3, 5, 7}
+        // Use basis {2, 3, 5, 7}
         let wheel_inc: [u8; 48] = [
             2, 4, 2, 4, 6, 2, 6, 4, 2, 4, 6, 6, 2, 6, 4, 2, 6, 4, 6, 8, 4, 2, 4, 2, 4, 8, 6, 4, 6,
             2, 4, 6, 2, 6, 6, 4, 2, 4, 6, 2, 6, 4, 2, 4, 2, 10, 2, 10,
         ];
 
-        let mut k = 221.into(); // start from 48th prime 223 (221 + first wheel inc)
+        let mut k = 221.into(); // Start search from 48th prime 223 (221 + first wheel inc)
 
         for wheel in wheel_inc.iter().cycle() {
             k = k + (*wheel).into();
 
             if k > num / k {
-                let mut factors = maybe_factors.lock().unwrap();
-
-                (*factors).factors.push((num, false));
-                num = T::one();
-                (*factors).num = num;
-
+                if let Ok(mut factors_guard) = maybe_factors.lock() {
+                    (*factors_guard).factors.push((num, false));
+                    num = T::one();
+                    (*factors_guard).num = num;
+                }
                 break;
             }
 
             if num % k == T::zero() {
-                let mut factors = maybe_factors.lock().unwrap();
+                let mut factors_guard = match maybe_factors.lock() {
+                    Ok(mtx_guard) => mtx_guard,
+                    _ => break,
+                };
 
-                if k > (*factors).num || (*factors).factors.iter().any(|&e| e.0 == k) {
-                    // maybe factor `k` already larger than the active number (which is to be factored)
-                    // or this factor has already been found
-                    num = (*factors).num;
+                if k > (*factors_guard).num || (*factors_guard).factors.iter().any(|&e| e.0 == k) {
+                    // Maybe factor `k` already larger than the active number or it has already been found
+                    num = (*factors_guard).num;
                     break;
                 }
 
                 loop {
                     num = num / k;
 
-                    (*factors).num = num;
-                    (*factors).factors.push((k, true));
+                    (*factors_guard).num = num;
+                    (*factors_guard).factors.push((k, true));
 
                     if num % k != T::zero() {
                         break;

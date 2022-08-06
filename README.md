@@ -34,7 +34,7 @@ if let Some(x) = quad_eq.solve() {
     assert_eq!(x, vec![226_765_812_977_082_276, 926_155_691_629_764_697]);
 }
 
-// Solve equation -x^2 + 2x - 1 = 0 (mod n), modulo `n` is now a semiprime
+// Solve equation -x^2 + 2x - 1 = 0 (mod n), `n` is now a semiprime
 // Coefs `a` and `c` are signed, hence use signed type equation
 let quad_eq = QuadEqSigned::<i128, u128> {
     a: -1,
@@ -61,6 +61,8 @@ let lin_eq = LinEq::<u8> {a: 17, b: 0, c: 1, modu: u8::MAX};
 // 17 doesn't have multiplicative inverse in this case
 assert_eq!(lin_eq.solve(), None);
 ```
+
+For linear equations with signed coefficients there is the LinEqSigned type available.
 
 Command line usage is simple as the following example of solving the same quadratic equation as above indicates
 

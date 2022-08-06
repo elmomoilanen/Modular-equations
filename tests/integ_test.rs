@@ -64,7 +64,7 @@ fn signed_quadratic_equation() {
         b: 99,
         c: 0,
         d: -110,
-        modu: 20871587710370244961,
+        modu: 20_871_587_710_370_244_961,
     };
 
     match quad_eq.solve() {
@@ -73,9 +73,9 @@ fn signed_quadratic_equation() {
                 sols,
                 vec![
                     10,
-                    7399711637570012490,
-                    13471876072800232480,
-                    20871587710370244960
+                    7_399_711_637_570_012_490,
+                    13_471_876_072_800_232_480,
+                    20_871_587_710_370_244_960
                 ]
             );
         }
@@ -209,30 +209,28 @@ fn quadratic_equation_semiprime_modulo() {
 }
 
 #[test]
-#[should_panic(expected = "arg `a` cannot be casted to unsigned.")]
 fn linear_equation_failure() {
     let lin_eq = LinEqSigned::<i64, u64> {
-        a: i64::MIN, // should cause panic, no abs value in 2's complement
+        a: i64::MIN, // No absolute value in 2's complement
         b: 1,
         c: -1,
         modu: 5,
     };
 
-    lin_eq.solve();
+    assert_eq!(lin_eq.solve(), None);
 }
 
 #[test]
-#[should_panic(expected = "arg `a` cannot be casted to unsigned.")]
 fn quadratic_equation_failure() {
     let quad_eq = QuadEqSigned::<i32, u32> {
-        a: i32::MIN, // should cause panic, no abs value in 2's complement
+        a: i32::MIN, // No absolute value in 2's complement
         b: 1,
         c: -1,
         d: -1,
         modu: 15,
     };
 
-    quad_eq.solve();
+    assert_eq!(quad_eq.solve(), None);
 }
 
 #[test]

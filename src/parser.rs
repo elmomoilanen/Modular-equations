@@ -110,14 +110,14 @@ fn parse_proper_type(
     let modu = modulo.unwrap();
 
     if modu <= 1 {
-        // modulo must be at least two
+        // Modulo must be at least two
         return None;
     }
 
     let coefs: Vec<i128> = coefs.iter().map(|&coef| coef.unwrap()).collect();
 
     if coefs[0] == 0 {
-        // coef for x^2 or x term must be non-zero
+        // Coef for x^2 or x term must be non-zero
         return None;
     }
 

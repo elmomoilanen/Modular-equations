@@ -28,8 +28,14 @@
 //! are more easier to work with since every nonzero element has a multiplicative inverse.
 //!
 //! Now in the context of rings and fields, it's meaningful to speak of equations
-//! and this library implements solvers for linear and quadratic equations. Next
-//! follows two examples of linear equations of the form ax + b = c (mod n).
+//! and this library implements solvers for linear and quadratic equations. Linear modular
+//! equations are generally much easier to solve than their quadratic counterparts.
+//! Structs `LinEq` and `LinEqSigned` defines linear equation types and their `solve`
+//! methods actually solve the equations. Similarly for quadratic case, structs
+//! `QuadEq` and `QuadEqSigned` define equation types and their `solve` methods can
+//! be used to actually solve the equations.
+//!
+//! Next follows few examples of linear equations of the form ax + b = c (mod n).
 //!
 //! ```
 //! use modular_equations::LinEq;
@@ -42,7 +48,7 @@
 //! };
 //! let sol = lin_eq.solve();
 //!
-//! // residue class \[8\] is the correct solution (smallest nonnegative member)
+//! // Residue class \[8\] is the correct solution (smallest nonnegative member)
 //! assert!(sol.is_some() && sol.unwrap()[0] == 8);
 //! ```
 //!
@@ -62,18 +68,37 @@
 //! ```
 //!
 //! If any of the coefficients (a, b, ...) is signed, one must use the signed type equation
-//! `LinEqSigned`. However, the modulo must still be unsigned. Every negative integer
+//! `LinEqSigned` as above. Modulo must always be unsigned type. Every negative integer
 //! in the ring can be turned to the smallest nonnegative representative of the
-//! corresponding residue class \[x\]. Related to this there are few technical
+//! corresponding residue class \[x\]. Related to this fact there are few technical
 //! restrictions, the first being that the used signed type (e.g. i32) must have
 //! the arith::SignCast trait implemented and that trait requires the signed and
-//! unsigned types to be compatible (i.e., having the same size in bytes). In addition,
+//! unsigned types to be compatible (i.e., have the same size in bytes). In addition,
 //! as the smallest negative integer of each type doesn't have an absolute value in
-//! two's complement, they will trigger panic if used as terms in equations.
+//! two's complement, they will trigger immediate None return value if used as coefficients
+//! in linear or quadratic equations.
 //!
-//! Next follows an example of solving a quadratic modular equation which is of the
-//! form ax^2 + bx + c = d (mod n) as its standard form. As the d coefficient is negative,
-//! this example must use the signed equation type `QuadEqSigned`.
+//! One important use case for linear equations is to find multiplicative inverses as
+//! the following example tries to do for 17 in Z/255Z
+//!
+//! ```
+//! use modular_equations::LinEq;
+//!
+//! let lin_eq = LinEq::<u8> {a: 17, b: 0, c: 1, modu: u8::MAX};
+//!
+//! // 17 doesn't have multiplicative inverse in this case
+//! assert_eq!(lin_eq.solve(), None);
+//! ```
+//!
+//! As mentioned above, quadratic equations of the form ax^2 + bx + c = d (mod n)
+//! are typically much harder to solve than their linear counterparts. In particular,
+//! this is the case when the modulo is a composite number as this requires
+//! factorization of the modulo to its prime factors and solving the equation for
+//! each of these prime factors before combining the final solution using the
+//! Chinese remainder theorem.
+//!
+//! Consider now an example of solving a quadratic modular equation. As the d
+//! coefficient is negative, the signed equation type `QuadEqSigned` must be used.
 //!
 //! ```
 //! use modular_equations::QuadEqSigned;
@@ -88,12 +113,36 @@
 //!
 //! match quad_eq.solve() {
 //!     Some(sols) if sols.len() == 4 => {
-//!         // correct solution consists of four residue classes
+//!         // Correct solution consists of four residue classes
 //!         assert_eq!(sols, vec![4, 6, 15, 17]);
 //!     }
 //!     _ => assert!(false),
 //! }
 //! ```
+//!
+//! An important use case for quadratic equations is to check whether a specific
+//! integer q is a quadratic residue meaning that there exists an integer x s.t.
+//! x^2 ≡ q (mod n) holds. Following example considers a case where for a relatively
+//! large prime modulo it is checked whether 1 is quadratic residue.
+//!
+//! ```
+//! use modular_equations::QuadEq;
+//!
+//! let quad_eq = QuadEq::<u128> {
+//!     a: 1,
+//!     b: 0,
+//!     c: 0,
+//!     d: 1,
+//!     modu: 340_282_366_920_938_463_463_374_607_431_768_211_297,
+//! };
+//!
+//! if let Some(x) = quad_eq.solve() {
+//!     // There should be two solutions `x`, thus q=1 is a quadratic residue in this case
+//!     assert_eq!(x.len(), 2);
+//!     assert!(x[0] == 1 && x[1] == quad_eq.modu - 1);
+//! } else {
+//!     assert!(false);
+//! }
 //!
 use std::convert::{From, Into};
 use std::fmt::{Debug, Display};

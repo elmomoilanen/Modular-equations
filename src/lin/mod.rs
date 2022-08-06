@@ -18,8 +18,7 @@ use num::iter;
 ///
 /// Linear modular equations are of the form ax + b = c (mod modu) where
 /// coefficients `a`, `b` and `c` must be nonnegative for this type. Also
-/// `modu` must be the same unsigned type and strictly larger than one. Solve
-/// method of this type will panic if the modulo doesn't satisfy this requirement.
+/// `modu` must be the same unsigned type and strictly larger than one.
 
 #[derive(Debug)]
 pub struct LinEq<T: UInt> {
@@ -34,9 +33,7 @@ pub struct LinEq<T: UInt> {
 /// Linear modular equations are of the form ax + b = c (mod modu) where
 /// coefficients `a`, `b` and `c` are signed for this type. Modulo `modu`
 /// must be an unsigned type but compatible to the signed type (same byte count),
-/// e.g. u32 if the signed type is i32, and strictly larger than one as
-/// its value. Solve method of this type will panic if the modulo doesn't
-/// satisfy this requirement.
+/// e.g. u32 if the signed type is i32, and strictly larger than one as its value.
 
 #[derive(Debug)]
 pub struct LinEqSigned<S: Int, T: UInt> {
@@ -97,7 +94,7 @@ where
     /// This method will try to cast the signed coefficients to unsigned type
     /// such that after the cast they will represent the smallest nonnegative
     /// integers of their corresponding residue classes (modulo modu). If some
-    /// of the casts fails, this method will panic but this should only occur
+    /// of the casts fails, this method will return None. This should only occur
     /// for S::min_value() value of the signed type S.
     ///
     /// After the cast to unsigned, the `solve` method of struct `LinEq` will
@@ -105,17 +102,26 @@ where
     pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {
             Some(a) => a,
-            None => panic!("arg `a` cannot be casted to unsigned."),
+            None => {
+                // Arg `a` cannot be casted to unsigned. Is it S::min_value()?
+                return None;
+            }
         };
 
         let b_us = match S::cast_to_unsigned(self.b, self.modu) {
             Some(b) => b,
-            None => panic!("arg `b` cannot be casted to unsigned."),
+            None => {
+                // Arg `b` cannot be casted to unsigned. Is it S::min_value()?
+                return None;
+            }
         };
 
         let c_us = match S::cast_to_unsigned(self.c, self.modu) {
             Some(c) => c,
-            None => panic!("arg `c` cannot be casted to unsigned."),
+            None => {
+                // Arg `c` cannot be casted to unsigned. Is it S::min_value()?
+                return None;
+            }
         };
 
         let lin_eq = LinEq {

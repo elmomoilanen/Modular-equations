@@ -39,9 +39,11 @@ pub fn is_odd_prime<T: UInt>(num: T) -> bool {
         is_prime_strong_bpsw(num_u128)
     } else if num_u128 > u32::MAX as u128 {
         let mr_base_large: [u64; 7] = [2, 325, 9375, 28_178, 450_775, 9_780_504, 1_795_265_022];
+        // num_u128 <= u64::MAX, thus cannot panic when casting to u64
         is_prime_mr(num_u128.try_into().unwrap(), &mr_base_large[..])
     } else {
         let mr_base_small: [u32; 3] = [2, 7, 61];
+        // num_u128 <= u32::MAX, thus cannot panic when casting to u32
         is_prime_mr(num_u128.try_into().unwrap(), &mr_base_small[..])
     }
 }

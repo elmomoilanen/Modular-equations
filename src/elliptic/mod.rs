@@ -1,4 +1,4 @@
-//! Implements operations for elliptic curves.
+//! Elliptic curve computation.
 //!
 //! These are needed in Lenstra elliptic-curve factorization method.
 //!
@@ -157,7 +157,7 @@ impl<T: UInt> EllipticCurve<T> {
 
         match curve.init_rnd_point(modu) {
             (true, a) => {
-                // return factor candidate gcd(k*P.z, modu)
+                // Return factor candidate gcd(k*P.z, modu)
                 T::gcd_mod(curve.montgomery_ladder(a, modu), modu)
             }
             (false, a) => a,
@@ -183,7 +183,7 @@ impl<T: UInt> EllipticCurve<T> {
         let a_denumer_inv = T::multip_inv(a_denumer, modu);
 
         if a_denumer_inv == T::zero() {
-            // no inverse for `a_denumer`
+            // No inverse for `a_denumer`
             return (false, T::gcd_mod(a_denumer, modu));
         }
 
