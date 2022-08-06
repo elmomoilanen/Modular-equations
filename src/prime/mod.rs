@@ -1,7 +1,7 @@
-//! Implements primality testing for odd natural numbers.
+//! Primality testing for odd natural numbers.
 //!
 //! Primality testing is separated in the following manner:
-//! - Run first a small check with first primes up to 61 (smallest prime good for MR test is 67).
+//! - Run first a small check with first primes up to 61 (smallest prime good for the MR test is 67).
 //! - Numbers up to 64 bits are cheched with the Miller-Rabin test.
 //! - Larger numbers up to the 128 bits are cheched with the strong Baillie-PSW test.
 //!
@@ -115,10 +115,11 @@ fn select_lucas_params(num: u128) -> Option<LucasParams<u128>> {
     let d_seq = (5..).step_by(2).enumerate();
 
     for (i, mut d) in d_seq {
+        // num > u64::MAX, thus case d > num is highly unlikely (should never occur)
         let d_orig = d;
 
         if i & 1 == 1 {
-            d = num - d % num;
+            d = num - d;
         }
 
         let jac_sym = u128::jacobi_symbol(d, num);
@@ -129,13 +130,12 @@ fn select_lucas_params(num: u128) -> Option<LucasParams<u128>> {
             } else if d == 5 {
                 (5, 5)
             } else {
-                let q_temp = (d_orig - 1) >> 2;
-                (1, num - q_temp % num)
+                (1, num - ((d_orig - 1) >> 2))
             };
-            return Some(LucasParams(d % num, p % num, q % num));
+            return Some(LucasParams(d, p, q));
         }
 
-        if jac_sym == 0 && (d_orig < num || d_orig % num != 0) {
+        if jac_sym == 0 && d_orig != num {
             return None;
         }
 
@@ -202,7 +202,7 @@ fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
         return false;
     }
 
-    if u128::mult_mod_unsafe(2, luc_q, num) != luc_v % num {
+    if u128::mult_mod_unsafe(2, luc_q, num) != luc_v {
         return false;
     }
 
