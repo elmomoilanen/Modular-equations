@@ -48,7 +48,7 @@
 //! };
 //! let sol = lin_eq.solve();
 //!
-//! // Residue class \[8\] is the correct solution (smallest nonnegative member)
+//! // Residue class [8] is the correct solution (smallest nonnegative member)
 //! assert!(sol.is_some() && sol.unwrap()[0] == 8);
 //! ```
 //!

@@ -52,6 +52,36 @@ impl<T: UInt> LinEq<T> {
     ///
     /// If a % modu == 0 (0 is the smallest nonnegative representative of \[a\]),
     /// there are no solutions since the variable x vanishes from the equation.
+    ///
+    /// If there aren't solutions, None is returned.
+    ///
+    /// # Examples
+    ///
+    /// Solve equation 3x + 3 = 1 (mod 1223)
+    ///
+    /// ```
+    /// use modular_equations::LinEq;
+    ///
+    /// let lin_eq = LinEq::<u32> {a: 3, b: 3, c: 1, modu: 1223};
+    ///
+    /// let sol = lin_eq.solve();
+    ///
+    /// // Residue class [407] is the only solution
+    /// assert!(sol.is_some() && sol.unwrap()[0] == 407);
+    /// ```
+    ///
+    /// Find the multiplicative inverse of \[254\] in Z/255Z
+    ///
+    /// ```
+    /// use modular_equations::LinEq;
+    ///
+    /// let lin_eq = LinEq::<u8> {a: 254, b: 0, c: 1, modu: 255};
+    ///
+    /// let mul_inv = lin_eq.solve();
+    ///
+    /// // Multip inverse of [254] is the residue class itself
+    /// assert!(mul_inv.is_some() && mul_inv.unwrap()[0] == 254);
+    /// ```
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() || self.a % self.modu == T::zero() {
             return None;
@@ -91,14 +121,16 @@ where
 {
     /// Solve linear modular equation for signed type terms.
     ///
-    /// This method will try to cast the signed coefficients to unsigned type
-    /// such that after the cast they will represent the smallest nonnegative
-    /// integers of their corresponding residue classes (modulo modu). If some
-    /// of the casts fails, this method will return None. This should only occur
-    /// for S::min_value() value of the signed type S.
+    /// This method will try to cast the signed type coefficients to unsigned
+    /// type such that after the cast they will represent the smallest nonnegative
+    /// integers of their corresponding residue classes. If some of the casts
+    /// fails, this method will return None but this should only occur for
+    /// S::min_value() value of the signed type S.
     ///
-    /// After the cast to unsigned, the `solve` method of struct `LinEq` will
-    /// be called to solve the equation.
+    /// After the cast to unsigned type, `solve` method of the struct `LinEq` is
+    /// called to solve the equation.
+    ///
+    /// Please see the documentation of `LinEq` for examples.
     pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {
             Some(a) => a,

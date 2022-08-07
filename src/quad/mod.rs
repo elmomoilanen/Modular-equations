@@ -56,14 +56,44 @@ impl<T: 'static + UInt> QuadEq<T> {
     /// Solve quadratic modular equation ax^2 + bx + c = d (mod modu).
     ///
     /// There will be 0 to N solutions x, depending on the equation. Easiest type
-    /// of equations to solve are cases with prime modulo and hardest with composite
+    /// of equations to solve are those with prime modulo and hardest with composite
     /// modulo as the modulo must be then first factorized into its prime factor
     /// representation and after that the equation needs to be solved for every
-    /// prime power case.
+    /// prime power case separately before combining the final solution using the
+    /// Chinese remainder theorem.
     ///
     /// If a % modu == 0 (0 is the smallest nonnegative representative of \[a\]) and
     /// also b % modu == 0, there are no solutions since the variable x vanishes
     /// from the equation.
+    ///
+    /// If there aren't solutions, None is returned.
+    ///
+    /// # Examples
+    ///
+    /// Solve equation x^2 + x + 3 = 11 (mod 41)
+    ///
+    /// ```
+    /// use modular_equations::QuadEq;
+    ///
+    /// let quad_eq = QuadEq::<u32> {a: 1, b: 1, c: 3, d: 11, modu: 41};
+    ///
+    /// // There are now two solutions, [9] and [31]
+    /// match quad_eq.solve() {
+    ///     Some(x) => assert_eq!(x, vec![9, 31]),
+    ///     None => assert!(false),
+    /// }
+    /// ```
+    ///
+    /// Check whether 3 is a quadratic residue for modulo 17
+    ///
+    /// ```
+    /// use modular_equations::QuadEq;
+    ///
+    /// let quad_eq = QuadEq::<u8> {a: 1, b: 0, c: 0, d: 3, modu: 17};
+    ///
+    /// // In this case, 3 is not a quadratic residue
+    /// assert_eq!(quad_eq.solve(), None);
+    /// ```
     pub fn solve(&self) -> Option<Vec<T>> {
         if self.modu <= T::one() {
             return None;
@@ -716,14 +746,16 @@ where
 {
     /// Solve quadratic modular equation for signed type terms.
     ///
-    /// This method will try to cast the signed coefficients to unsigned type
-    /// such that after the cast they will represent the smallest nonnegative
-    /// integers of their corresponding residue classes (modulo modu). If some
-    /// of the casts fails, this method will return None. This should only occur
-    /// for S::min_value() value of the signed type S.
+    /// This method will try to cast the signed type coefficients to unsigned
+    /// type such that after the cast they will represent the smallest nonnegative
+    /// integers of their corresponding residue classes. If some of the casts
+    /// fails, this method will return None but this should only occur for
+    /// S::min_value() value of the signed type S.
     ///
-    /// After the cast to unsigned, the `solve` method of struct `QuadEq` will
-    /// be called to solve the equation.
+    /// After the cast to unsigned type, `solve` method of the struct `QuadEq` is
+    /// called to solve the equation.
+    ///
+    /// Please see the documentation of `QuadEq` for examples.
     pub fn solve(&self) -> Option<Vec<T>> {
         let a_us = match S::cast_to_unsigned(self.a, self.modu) {
             Some(a) => a,
