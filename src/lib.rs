@@ -137,12 +137,18 @@
 //! };
 //!
 //! if let Some(x) = quad_eq.solve() {
-//!     // There should be two solutions `x`, thus q=1 is a quadratic residue in this case
+//!     // There should be two solutions `x`, thus q=1 is a quadratic residue
 //!     assert_eq!(x.len(), 2);
 //!     assert!(x[0] == 1 && x[1] == quad_eq.modu - 1);
 //! } else {
 //!     assert!(false);
 //! }
+//! ```
+//!
+//! As a warning, some equations have a huge amount of solutions and in these cases
+//! the solver might slow down considerable or even panic when the solution count
+//! exceeds usize::MAX. But these are really special cases and usually not very
+//! much of interest.
 //!
 use std::convert::{From, Into};
 use std::fmt::{Debug, Display};

@@ -55,14 +55,14 @@ Linear modular equations are generally much easier to solve than quadratic equat
 ```rust
 use modular_equations::LinEq;
 
-// Try to solve equation 17x = 1 (mod 255)
+// Try to solve 17x = 1 (mod 255), or in other words find multip inverse for 17
 let lin_eq = LinEq::<u8> {a: 17, b: 0, c: 1, modu: u8::MAX};
 
 // 17 doesn't have multiplicative inverse in this case
 assert_eq!(lin_eq.solve(), None);
 ```
 
-For linear equations with signed coefficients there is the LinEqSigned type available.
+For linear equations with signed coefficients there is the `LinEqSigned` type available.
 
 Command line usage is simple as the following example of solving the same quadratic equation as above indicates
 
@@ -71,6 +71,8 @@ modular_equations 1 3 4 0 $((2 ** 60))
 ```
 
 Solutions for the equation are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above *i128::MAX* for coefficients of the equation.
+
+Notice that some equations have a huge amount of solutions and in these cases the solver might slow down considerable or even panic when the solution count exceeds *usize::MAX*. But these are really special cases and usually not very much of interest.
 
 ## License ##
 
