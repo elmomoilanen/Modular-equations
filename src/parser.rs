@@ -128,7 +128,7 @@ fn get_proper_eq_type(coefs: &[i128], modu: u128, eq_type: EqType) -> EquaKind {
     let smaller_modu = modu <= U64_VALID_MAX;
     let smaller_coefs = coefs
         .iter()
-        .all(|&coef| coef >= I64_VALID_MIN && coef <= I64_VALID_MAX);
+        .all(|&coef| (I64_VALID_MIN..=I64_VALID_MAX).contains(&coef));
 
     match (eq_type, smaller_coefs && smaller_modu) {
         (EqType::Linear, true) => EquaKind::LinearI64(LinEqSigned::<i64, u64> {
