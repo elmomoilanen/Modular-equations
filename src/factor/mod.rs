@@ -8,9 +8,10 @@
 //! implements elliptic curve arithmetic needed during factorization.
 //!
 //! Constant `MAX_WORKERS` defines the maximal thread count. This value must be at least two
-//! and preferably between two and ten (by rough empirical testing). First thread will
-//! actually do wheel factorization targeting smaller prime factors whereas other threads
-//! run the actual elliptic-curve factorization method.
+//! and preferably between three and six (by rough empirical testing). First thread will
+//! actually run the wheel factorization targeting smaller prime factors whereas other threads
+//! run the actual elliptic-curve factorization method. Thus, if the thread count has been
+//! set to one, only the wheel factorization will run.
 //!
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
@@ -19,8 +20,9 @@ use num::integer;
 
 use crate::{arith::Arith, elliptic::EllipticCurve, prime, UInt};
 
-/// Thread count for elliptic curve factorization, set between 2 and 10.
-const MAX_WORKERS: usize = 6;
+/// Thread count for elliptic curve factorization.
+/// Set between 3 and 6 (best efficiency by rough empirical testing).
+const MAX_WORKERS: usize = 5;
 
 /// Max count of elliptic curves during single elliptic factorization run.
 const MAX_ELLIPTIC_CURVES: usize = 125;

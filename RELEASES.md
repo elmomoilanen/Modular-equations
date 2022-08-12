@@ -1,3 +1,13 @@
+# Release 1.0.3 (12-08-2022)
+
+### Changed
+
+- Default worker thread count for factorization
+
+### Added
+
+- Docs link (appears in crates.io)
+
 # Release 1.0.2 (07-08-2022)
 
 ### Added
