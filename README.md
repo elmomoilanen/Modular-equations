@@ -13,14 +13,14 @@ For the library target, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-modular_equations = "^1.0"
+modular_equations = "1.0.4"
 ```
 
-For the binary target, easiest way to install is just to run `cargo install modular_equations` and make sure that the installation location is in $PATH. After that the command `modular_equations --help` should work and show further usage advice.
+For the binary target, run command `cargo install modular_equations` and make sure that the installation location is in PATH. After that the command `modular_equations --help` should work and show further usage advice.
 
 ## Use ##
 
-After installation, use the library to solve quadratic equations as follows
+Use the library to solve quadratic equations as follows
 
 ```rust
 use modular_equations::{QuadEq, QuadEqSigned};
@@ -34,8 +34,8 @@ if let Some(x) = quad_eq.solve() {
     assert_eq!(x, vec![226_765_812_977_082_276, 926_155_691_629_764_697]);
 }
 
-// Solve equation -x^2 + 2x - 1 = 0 (mod n), `n` is now a semiprime
-// Coefs `a` and `c` are signed, hence use signed type equation
+// Solve equation -x^2 + 2x - 1 = 0 (mod n), modulo `n` is now a semiprime
+// Coefs `a` and `c` are signed, hence must use signed type equation
 let quad_eq = QuadEqSigned::<i128, u128> {
     a: -1,
     b: 2,
@@ -50,7 +50,7 @@ if let Some(x) = quad_eq.solve() {
 }
 ```
 
-Linear modular equations are generally much easier to solve than quadratic equation. Following code block shows an example of solving a linear equation that ultimately does not have any solutions.
+Linear modular equations are generally much easier to solve than quadratic equations. Following code block shows an example of solving a linear equation that ultimately does not have any solutions.
 
 ```rust
 use modular_equations::LinEq;
@@ -62,15 +62,15 @@ let lin_eq = LinEq::<u8> {a: 17, b: 0, c: 1, modu: u8::MAX};
 assert_eq!(lin_eq.solve(), None);
 ```
 
-For linear equations with signed coefficients there is the `LinEqSigned` type available.
+For linear equations with signed coefficients there is type `LinEqSigned` available.
 
-Command line usage is simple as the following example of solving the same quadratic equation as above indicates
+If the binary target was installed, CLI can be used as follows (solving the same quadratic equation as above)
 
 ```bash
 modular_equations 1 3 4 0 $((2 ** 60))
 ```
 
-Solutions for the equation are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above *i128::MAX* for coefficients of the equation.
+Solutions for the equations are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above *i128::MAX* for coefficients of the equation.
 
 Notice that some equations have a huge amount of solutions and in these cases the solver might slow down considerable or even panic when the solution count exceeds *usize::MAX*. But these are really special cases and usually not very much of interest.
 

@@ -1,3 +1,20 @@
+# Release 1.0.4 (27-10-2022)
+
+### Fixed
+
+- Zero power in arithmetic
+
+### Changed
+
+- Optimize elliptic-curve computation (Montgomery ladder)
+- Remove redundant zero checks in arithmetic
+- Documentation
+
+### Added
+
+- itertools crate
+- integration tests
+
 # Release 1.0.3 (12-08-2022)
 
 ### Changed
