@@ -145,7 +145,7 @@
 //! }
 //! ```
 //!
-//! As a warning, some equations have a huge amount of solutions and in these cases
+//! As a warning note, some equations have a huge amount of solutions and in these cases
 //! the solver might slow down considerable or even panic when the solution count
 //! exceeds usize::MAX. But these are really special cases and usually not very
 //! much of interest.

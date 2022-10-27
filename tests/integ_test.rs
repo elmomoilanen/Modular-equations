@@ -183,6 +183,26 @@ fn quadratic_equation_large_modulo() {
 }
 
 #[test]
+fn quadratic_equation_large_power_of_two_modulo() {
+    let quad_eq = QuadEq::<u128> {
+        a: 1,
+        b: 3,
+        c: 4,
+        d: 0,
+        modu: 2u128.pow(120),
+    };
+
+    match quad_eq.solve() {
+        Some(sols) => {
+            assert_eq!(sols.len(), 2);
+            assert_eq!(sols[0], 150_432_075_026_641_822_261_322_309_717_221_465);
+            assert_eq!(sols[1], 1_178_795_920_758_274_050_642_484_750_563_123_108);
+        }
+        _ => assert!(false),
+    }
+}
+
+#[test]
 fn quadratic_equation_semiprime_modulo() {
     let quad_eq = QuadEq::<u128> {
         a: 1,
@@ -202,6 +222,33 @@ fn quadratic_equation_semiprime_modulo() {
                     46_455_352_579_014_093_597_427_769_072_447,
                     60_994_669_611_024_598_039_430_264_614_167,
                 ]
+            );
+        }
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn quadratic_equation_max_modulo() {
+    let quad_eq = QuadEqSigned::<i128, u128> {
+        a: -1,
+        b: -3,
+        c: 0,
+        d: 0,
+        modu: u128::MAX,
+    };
+
+    match quad_eq.solve() {
+        Some(sols) => {
+            assert_eq!(sols.len(), 256);
+            // Check that smallest and largest solutions are correct
+            assert_eq!(sols[0], 0);
+            assert_eq!(sols[1], 6_582_685_413_135_159_043_597_262_296_651_990_362);
+            assert_eq!(sols[2], 8_509_006_254_635_304_544_360_869_534_143_792_742);
+            // Larger solutions have at least 38 digits
+            assert_eq!(
+                sols[sols.len() - 1],
+                340_282_366_920_938_463_463_374_607_431_768_211_452
             );
         }
         _ => assert!(false),

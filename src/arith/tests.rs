@@ -218,9 +218,11 @@ fn exp_small_type() {
     let modu = 5;
 
     // [x, y, res]: x^y = res (mod modu)
-    let test_cases: [[u8; 3]; 10] = [
-        [0, 0, 0],
+    let test_cases: [[u8; 3]; 12] = [
+        [0, 0, 1],
+        [5, 0, 1],
         [0, 1, 0],
+        [0, 2, 0],
         [1, 0, 1],
         [5, 1, 0],
         [2, 4, 1],
@@ -243,7 +245,9 @@ fn exp_large_type() {
     let modu = u64::MAX as u128;
 
     // [x, y, res]: x^y = res (mod modu)
-    let test_cases: [[u128; 3]; 8] = [
+    let test_cases: [[u128; 3]; 10] = [
+        [0, 0, 1],
+        [0, 1_000_000_000, 0],
         [2, 1_000_000_000, 1],
         [modu - 1, 1_000_000_000, 1],
         [modu - 1, 1_000_000_001, modu - 1],

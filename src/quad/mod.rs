@@ -55,7 +55,7 @@ pub struct QuadEqSigned<S: Int, T: UInt> {
 impl<T: 'static + UInt> QuadEq<T> {
     /// Solve quadratic modular equation ax^2 + bx + c = d (mod modu).
     ///
-    /// There will be 0 to N solutions x, depending on the equation. Easiest type
+    /// There will be 0 to N solutions x, depending on the equation. The easiest kind
     /// of equations to solve are those with prime modulo and hardest with composite
     /// modulo as the modulo must be then first factorized into its prime factor
     /// representation and after that the equation needs to be solved for every
@@ -124,11 +124,11 @@ impl<T: 'static + UInt> QuadEq<T> {
 
         match prime::is_odd_prime(quad.modu) {
             true if quad.a == T::one() && quad.b == T::zero() => {
-                // solve x^2 = d (mod modu)
+                // Solve x^2 = d (mod modu)
                 quad.solve_quad_residue_odd_prime_mod()
             }
             true => {
-                // it might be possible to convert ax^2 + bx = d (mod modu)
+                // It might be possible to convert ax^2 + bx = d (mod modu)
                 // to (2ax + b)^2 = b^2 + 4ad which can then be solved in two steps
                 quad.solve_quad_simple()
             }
@@ -136,7 +136,7 @@ impl<T: 'static + UInt> QuadEq<T> {
                 let mut factors = Factors::new(quad.modu);
 
                 factors.factorize();
-                // prime factor repr of `quad.modu`: [(p_1,k_1), ..., (p_n,k_n)] s.t.
+                // Prime factor repr of `quad.modu`: [(p_1,k_1), ..., (p_n,k_n)] s.t.
                 // quad.modu = p_1^k_1 * ... * p_n^k_n holds
                 let prm_factor_repr = factors.prime_factor_repr();
 
@@ -240,7 +240,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         if T::exp_mod(self.d, (self.modu - T::one()) / 2.into(), self.modu) != T::one() {
-            // doesn't satisfy Euler's criterion
+            // Doesn't satisfy Euler's criterion
             return None;
         }
 
@@ -359,8 +359,8 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         if uniq_factors > 1 {
-            // multiple factors, combine solutions for the original modulo
-            modu_start_index.pop(); // last index is always redundant
+            // Multiple factors, combine solutions for the original modulo
+            modu_start_index.pop(); // Last index is always redundant
 
             Some(QuadEq::combine_solution_for_compo_modu(
                 x_sols,
@@ -369,7 +369,7 @@ impl<T: 'static + UInt> QuadEq<T> {
                 modu_sol_count,
             ))
         } else {
-            // only one factor (p_i^k_i), nothing to combine
+            // Only one factor (p_i^k_i), nothing to combine
             let mut sol: Vec<T> = x_sols.iter().map(|&x_tuple| x_tuple.0).collect();
             sol.sort();
 
@@ -383,13 +383,13 @@ impl<T: 'static + UInt> QuadEq<T> {
             return self.solve_quad_residue_power_of_two_mod(prm_k, total_modulo);
         }
 
-        // take out common powers of two if possible
+        // Take out common powers of two if possible
         let t = largest_common_dividing_power_of_two(
             (self.a % total_modulo).into(),
             (self.b % total_modulo).into(),
             (self.d % total_modulo).into(),
         );
-        let m_prm_k = prm_k - t; // always >= 0
+        let m_prm_k = prm_k - t; // Always >= 0
 
         let mut m_quad = QuadEq { ..*self };
         m_quad.a = m_quad.a.unsigned_shr(t.into());
@@ -494,7 +494,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         }
 
         if d % 8.into() == T::one() {
-            // odd squares
+            // Odd squares
             let mut sols: Vec<T> = vec![];
             let base: Vec<T> = vec![T::one(), 3.into()];
 
@@ -518,7 +518,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         let d_sqrt = integer::sqrt(d);
 
         if T::trunc_square(d_sqrt) == d {
-            // even square, base solution for mod 2 equals 0
+            // Even square, base solution for mod 2 equals 0
             let mut m_quad = QuadEq { ..*self };
             m_quad.a = T::one();
             m_quad.d = d;
@@ -544,7 +544,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         let mut m_quad = QuadEq { ..*self };
         m_quad.a = m_quad.a.unsigned_shr(t.into());
         m_quad.d = m_quad.d.unsigned_shr(t.into());
-        // either a or d should be odd now
+        // Either a or d should be odd now
 
         let m_total_modulo = self.modu.pow(m_prm_k.into());
 
@@ -584,7 +584,7 @@ impl<T: 'static + UInt> QuadEq<T> {
         m_prm_k: u8,
         t: u8,
     ) -> Option<Vec<T>> {
-        let modulo = self.modu.pow(prm_k.into()); // original modulo
+        let modulo = self.modu.pow(prm_k.into()); // Original modulo
         let modulo_t = self.modu.pow(t.into()); // >= 1
         let multiplier = self.modu.pow(m_prm_k.into());
 
@@ -625,7 +625,7 @@ impl<T: 'static + UInt> QuadEq<T> {
             );
 
             if T::gcd_mod(self.modu, poly_d) != T::one() {
-                // singular root, poly_d doesn't have multiplicative inverse
+                // Singular root, poly_d doesn't have multiplicative inverse
                 if let Some(mut lifted_sols) = self.lift_singular_root(sub_sol, prm_k) {
                     sols.append(&mut lifted_sols);
                 }
@@ -677,7 +677,7 @@ impl<T: 'static + UInt> QuadEq<T> {
                 let poly = T::add_mod_unsafe(T::add_mod_unsafe(ax, bx, modu), cx, modu);
 
                 if poly % modu == T::zero() {
-                    // every lifting of root `sol`, `sol + t * modu_prev`, is a root of modulo `modu`
+                    // Every lifting of root `sol`, `sol + t * modu_prev`, is a root of modulo `modu`
                     let modu_prev = modu / self.modu;
 
                     for new_sol in iter::range_step(*sol, modu, modu_prev) {

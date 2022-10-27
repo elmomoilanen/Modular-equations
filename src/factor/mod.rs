@@ -65,8 +65,7 @@ impl<T: 'static + UInt> Factors<T> {
 
         self.factorize_until_completed(num);
 
-        // factorize_elliptic step might have resulted extra factors
-        // that aren't wanted at the end, prune them now
+        // Factorize_elliptic step might have resulted extra factors, prune them now
         self.prune_duplicate_factors()
     }
 

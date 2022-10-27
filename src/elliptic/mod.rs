@@ -4,6 +4,8 @@
 //!
 use rand::Rng;
 
+use itertools::Itertools;
+
 use crate::{
     arith::{Arith, CoreArith},
     UInt,
@@ -17,8 +19,8 @@ const BYTES_10K_LEN: usize = 1806;
 /// 1) Compute lcm(1,...,B) for B = 10_000, and convert the result to base 2 (binary)
 /// 2) Decompose the base 2 representation to an array of bytes (each element has 8 bits)
 ///
-/// E.g., in the following array hexadecimal 0x9b contains the first 8 bits of the base 2 representation,
-/// 0x2c the next 8 bits etc.
+/// E.g., in the following array hexadecimal 0x9b contains the first 8 bits of the base 2
+/// representation, 0x2c the next 8 bits etc.
 static BYTES_10K: [u8; BYTES_10K_LEN] = [
     0x9b, 0x2c, 0xc9, 0x32, 0x95, 0x1f, 0x3e, 0x64, 0x97, 0xc2, 0x46, 0x3b, 0xa9, 0xf2, 0xdb, 0x91,
     0x2e, 0xda, 0x8e, 0x89, 0x25, 0x06, 0xa4, 0xab, 0xbc, 0x33, 0x3e, 0x7d, 0x6f, 0x3a, 0x25, 0xed,
@@ -183,7 +185,7 @@ impl<T: UInt> EllipticCurve<T> {
         let a_denumer_inv = T::multip_inv(a_denumer, modu);
 
         if a_denumer_inv == T::zero() {
-            // No inverse for `a_denumer`
+            // No multiplicative inverse for `a_denumer`
             return (false, T::gcd_mod(a_denumer, modu));
         }
 
@@ -221,8 +223,8 @@ impl<T: UInt> EllipticCurve<T> {
         );
     }
 
-    /// Add two points P (`self`) and Q (`point`) on the elliptic curve, updating
-    /// the point P in-place.
+    /// Add two points P (`self`) and Q (`point`) on the elliptic curve,
+    /// updating the point P in-place.
     ///
     /// Difference between the points equals the initial point `point0`.
     fn elliptic_add(&mut self, point: &Self, point0: &Self, modu: T) {
@@ -260,25 +262,19 @@ impl<T: UInt> EllipticCurve<T> {
 
         p.elliptic_double(a, modu);
 
-        let bits = u8::BITS;
-        let ms_bit_idx = u8::BITS - 1;
+        let it_bits_rev = (0..u8::BITS).rev();
+        let it = BYTES_10K.iter().cartesian_product(it_bits_rev);
 
-        let last_byte_idx = BYTES_10K_LEN - 1;
+        // First and last bits of `BYTES_10K_LEN` must be left out
+        let take_count = BYTES_10K_LEN * u8::BITS as usize - 1;
 
-        for (byte_idx, byte_val) in BYTES_10K.iter().enumerate() {
-            for cbit in (0..bits).rev() {
-                if (byte_idx == 0 && cbit == ms_bit_idx) || (byte_idx == last_byte_idx && cbit == 0)
-                {
-                    continue;
-                }
-
-                if (*byte_val >> cbit) & 1 == 1 {
-                    q.elliptic_add(&p, self, modu);
-                    p.elliptic_double(a, modu);
-                } else {
-                    p.elliptic_add(&q, self, modu);
-                    q.elliptic_double(a, modu);
-                }
+        for (byte_val, cbit) in it.take(take_count).skip(1) {
+            if (*byte_val >> cbit) & 1 == 1 {
+                q.elliptic_add(&p, self, modu);
+                p.elliptic_double(a, modu);
+            } else {
+                p.elliptic_add(&q, self, modu);
+                q.elliptic_double(a, modu);
             }
         }
 

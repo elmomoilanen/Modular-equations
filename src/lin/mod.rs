@@ -47,7 +47,7 @@ impl<T: UInt> LinEq<T> {
     /// Solve linear modular equation ax + b = c (mod modu).
     ///
     /// There will be 0 to N solutions x, 0 case occurring when gcd(a, modu) doesn't
-    /// divide the c coefficient and on the contrary, magnitude of N depending on the
+    /// divide the c coefficient and, on the contrary, magnitude of N depending on the
     /// equation. If gcd(a, modu) == 1, there will be a unique solution.
     ///
     /// If a % modu == 0 (0 is the smallest nonnegative representative of \[a\]),

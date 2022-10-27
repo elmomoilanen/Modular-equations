@@ -42,10 +42,6 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     /// Two's complement wrapping occurs if the argument
     /// `x` is not smaller than `modu`.
     fn mult_mod_unsafe(mut x: T, mut y: T, modu: T) -> T {
-        if x == T::zero() || y == T::zero() {
-            return T::zero();
-        }
-
         let mut res = T::zero();
 
         while y > T::zero() {
@@ -64,10 +60,6 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     ///
     /// Uses directly unsafe modular multiplication.
     fn exp_mod_unsafe(mut base: T, mut ex: T, modu: T) -> T {
-        if base == T::zero() {
-            return base;
-        }
-
         let mut res = T::one();
 
         while ex > T::zero() {
@@ -86,10 +78,6 @@ pub trait CoreArith<T: PrimInt + Unsigned> {
     ///
     /// Uses directly unsafe modular multiplication.
     fn exp_mod_unsafe_u128(mut base: T, mut ex: u128, modu: T) -> T {
-        if base == T::zero() {
-            return base;
-        }
-
         let mut res = T::one();
 
         while ex > 0 {
@@ -192,7 +180,7 @@ where
         }
 
         if rem > T::one() {
-            // inverse doesn't exist, gcd(x, modu) > 1
+            // Inverse doesn't exist for x, gcd(x, modu) > 1
             return T::zero();
         }
 
@@ -274,7 +262,7 @@ where
             };
         }
         if x == S::min_value() {
-            // no abs value
+            // No abs value
             return None;
         }
 

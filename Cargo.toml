@@ -4,15 +4,12 @@ version = "1.0.3"
 authors = ["Elmo Moilanen"]
 edition = "2021"
 license = "CC0-1.0"
-
 description = "Program to solve quadratic and linear modular equations."
 
 keywords = ["modular-arithmetic", "congruence", "linear-equations", "quadratic-equations"]
 categories = ["mathematics"]
-
 repository = "https://github.com/elmomoilanen/Modular-equations"
 readme = "README.md"
-
 documentation = "https://docs.rs/modular_equations/"
 
 exclude = [".github"]
@@ -31,3 +28,4 @@ opt-level = 3
 [dependencies]
 num = "0.4"
 rand = "0.8"
+itertools = "0.10"

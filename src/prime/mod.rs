@@ -155,8 +155,6 @@ fn select_lucas_params(num: u128) -> Option<LucasParams<u128>> {
 fn pass_strong_lucas_test(num: u128, params: LucasParams<u128>) -> bool {
     let num_even = num + 1; // not allowed with u128::MAX but Fermat's test should have handled it
     let num_odd = num_even.unsigned_shr(num_even.trailing_zeros());
-    // num_even = 2^pow * num_odd, pow == num_even.trailing_zeros()
-
     let num_even_lead_zeros = num_even.leading_zeros();
 
     let bits_to_check = u128::BITS - num_even_lead_zeros;
@@ -227,7 +225,7 @@ fn modify_lucas_coef(x_left: u128, x_right: u128, num: u128) -> u128 {
     let numer = u128::add_mod_unsafe(x_left, x_right, num);
 
     if numer & 1 == 1 {
-        // decompose both odds to 2k + 1, and compute k1 + k2 + 1 (mod num)
+        // Decompose both odds to 2k + 1, and compute k1 + k2 + 1 (mod num)
         u128::add_mod_unsafe((numer - 1) >> 1, ((num - 1) >> 1) + 1, num)
     } else {
         numer >> 1
