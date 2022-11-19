@@ -8,6 +8,8 @@ use num::PrimInt;
 
 use crate::{LinEqSigned, QuadEqSigned};
 
+const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+
 const I64_VALID_MIN: i128 = (i64::MIN + 1) as i128;
 const I64_VALID_MAX: i128 = i64::MAX as i128;
 const U64_VALID_MAX: u128 = u64::MAX as u128;
@@ -32,6 +34,10 @@ pub fn parse_args(args: &[String]) -> Result<EquaKind, String> {
         0 => Err("no arguments provided.".to_string()),
         1 if &args[0] == "--help" || &args[0] == "-h" => {
             show_help();
+            Err("help".to_string())
+        }
+        1 if &args[0] == "--version" || &args[0] == "-v" => {
+            println!("modular_equations {}", VERSION.unwrap_or(""));
             Err("help".to_string())
         }
         4 => {

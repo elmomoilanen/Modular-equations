@@ -261,13 +261,13 @@ impl<T: 'static + UInt> Factors<T> {
                     }
                 };
 
-                for tuple in (*maybe_factors_guard).factors.iter() {
+                for tuple in maybe_factors_guard.factors.iter() {
                     factors.push(*tuple);
                 }
                 if completed {
                     T::one()
                 } else {
-                    (*maybe_factors_guard).num
+                    maybe_factors_guard.num
                 }
             }
             Err(_) => {
@@ -275,11 +275,11 @@ impl<T: 'static + UInt> Factors<T> {
 
                 let maybe_factors_guard = maybe_factors_mtx.lock().unwrap();
 
-                for tuple in (*maybe_factors_guard).factors.iter() {
+                for tuple in maybe_factors_guard.factors.iter() {
                     factors.push(*tuple);
                 }
 
-                (*maybe_factors_guard).num
+                maybe_factors_guard.num
             }
         }
     }
@@ -303,17 +303,17 @@ impl<T: 'static + UInt> Factors<T> {
                     }
                 };
 
-                if maybe_factor > (*factors_guard).num {
-                    num = (*factors_guard).num;
+                if maybe_factor > factors_guard.num {
+                    num = factors_guard.num;
                 } else {
                     num = num / maybe_factor;
-                    (*factors_guard).num = num;
-                    (*factors_guard).factors.push((maybe_factor, false));
+                    factors_guard.num = num;
+                    factors_guard.factors.push((maybe_factor, false));
 
                     if prime::is_odd_prime(num) {
-                        (*factors_guard).factors.push((num, true));
+                        factors_guard.factors.push((num, true));
                         num = T::one();
-                        (*factors_guard).num = num;
+                        factors_guard.num = num;
                     }
                 }
             } else if maybe_factor == num && prime::is_odd_prime(maybe_factor) {
@@ -325,17 +325,17 @@ impl<T: 'static + UInt> Factors<T> {
                     }
                 };
 
-                if maybe_factor == (*factors_guard).num {
+                if maybe_factor == factors_guard.num {
                     num = T::one();
-                    (*factors_guard).num = num;
-                    (*factors_guard).factors.push((maybe_factor, true));
+                    factors_guard.num = num;
+                    factors_guard.factors.push((maybe_factor, true));
                 } else {
-                    num = (*factors_guard).num;
+                    num = factors_guard.num;
                 }
             } else if curve_count & 31 == 0 {
                 // Update factored number `num`
                 if let Ok(mtx_guard) = maybe_factors.lock() {
-                    num = (*mtx_guard).num;
+                    num = mtx_guard.num;
                 }
             }
 
@@ -363,9 +363,9 @@ impl<T: 'static + UInt> Factors<T> {
 
             if k > num / k {
                 if let Ok(mut factors_guard) = maybe_factors.lock() {
-                    (*factors_guard).factors.push((num, false));
+                    factors_guard.factors.push((num, false));
                     num = T::one();
-                    (*factors_guard).num = num;
+                    factors_guard.num = num;
                 }
                 break;
             }
@@ -376,17 +376,17 @@ impl<T: 'static + UInt> Factors<T> {
                     _ => break,
                 };
 
-                if k > (*factors_guard).num || (*factors_guard).factors.iter().any(|&e| e.0 == k) {
+                if k > factors_guard.num || factors_guard.factors.iter().any(|&e| e.0 == k) {
                     // Maybe factor `k` already larger than the active number or it has already been found
-                    num = (*factors_guard).num;
+                    num = factors_guard.num;
                     break;
                 }
 
                 loop {
                     num = num / k;
 
-                    (*factors_guard).num = num;
-                    (*factors_guard).factors.push((k, true));
+                    factors_guard.num = num;
+                    factors_guard.factors.push((k, true));
 
                     if num % k != T::zero() {
                         break;
