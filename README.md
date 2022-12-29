@@ -3,7 +3,7 @@
 [![main](https://github.com/elmomoilanen/Modular-equations/actions/workflows/main.yml/badge.svg)](https://github.com/elmomoilanen/Modular-equations/actions/workflows/main.yml)
 [![crate](https://img.shields.io/crates/v/modular_equations.svg?logo=rust&color=orange)](https://crates.io/crates/modular_equations)
 
-Program to solve quadratic and linear modular equations `ax^2 + bx + c = d (mod n)` where x represents the unknown and coefficients from a to d residue classes belonging to the ring of integers Z/nZ. Modulo n must be a positive integer and strictly larger than one.
+Program to solve quadratic and linear modular equations `ax^2 + bx + c = d (mod n)` where x represents the unknown and coefficients from a to d residue classes each belonging to the ring of integers Z/nZ. Modulo n must be a positive integer and strictly larger than one.
 
 Solutions, if any, are given as residue classes represented by the smallest nonnegative integers belonging to the corresponding classes.
 
@@ -13,7 +13,7 @@ For the library target, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-modular_equations = "1.0.4"
+modular_equations = "1.0.5"
 ```
 
 For the binary target, run command `cargo install modular_equations` and make sure that the installation location is in PATH. After that the command `modular_equations --help` should work and show further usage advice.
@@ -70,9 +70,9 @@ If the binary target was installed, CLI can be used as follows (solving the same
 modular_equations 1 3 4 0 $((2 ** 60))
 ```
 
-Solutions for the equations are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above *i128::MAX* for coefficients of the equation.
+Solutions for the equations are printed on their own lines to stdout. Notice that CLI always assumes a signed type for the equation coefficients and the modulo will take the corresponding unsigned type. This indicates that the CLI cannot take argument values above i128::MAX for coefficients of the equation.
 
-Notice that some equations have a huge amount of solutions and in these cases the solver might slow down considerable or even panic when the solution count exceeds *usize::MAX*. But these are really special cases and usually not very much of interest.
+Notice that some equations have a huge amount of solutions and in these cases the solver might slow down considerable or even panic when the solution count exceeds usize::MAX. But these are really special cases and probably not very much of interest.
 
 ## License ##
 

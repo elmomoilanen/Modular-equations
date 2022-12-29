@@ -1,3 +1,15 @@
+# Release 1.0.5 (30-12-2022)
+
+### Changed
+
+- Explicit derefs removed when auto-deref possible
+- Disable overflow-checks in dev mode by default
+- Documentation
+
+### Added
+
+- Version number CLI argument
+
 # Release 1.0.4 (27-10-2022)
 
 ### Fixed
